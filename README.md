@@ -64,8 +64,29 @@
 | **Стилизация**   | Чистый CSS + мобильная адаптация через `@media` (без фреймворков) |
 
 > ✅ Интерфейс тестируется на ширинах от 320px (мобильные) до 1920px (десктоп).
-
----
+ 
+ ## ⚙️ Backend (FastAPI)
+ 
+ Бэкенд — FastAPI-сервис внутри каталога <code>backend/app</code> с настройками через <code>Settings</code>, SQLModel и JWT-конфигурацией. SQLite-файл <code>backend/dev.db</code> создаётся автоматически после первого запуска сервиса.
+ 
+ ### Что реализовано
+ - <code>/auth/register</code> создаёт пользователя, хеширует пароль и возвращает DTO.
+ - <code>/auth/login</code> возвращает JWT (Bearer) и профиль пользователя.
+ - <code>/profile</code> (GET/PUT) читает или обновляет пользователя, проверяя токен через <code>OAuth2PasswordBearer</code>.
+ - Пароли хранятся через <code>passlib[bcrypt]</code>, токены кодируются <code>python-jose</code>, конфигурация подтягивается из переменных окружения.
+ 
+ ### Запуск
+ ```bash
+ python -m venv .venv
+ source .venv/bin/activate
+ pip install fastapi uvicorn[standard] sqlmodel passlib[bcrypt] python-jose
+ export JWT_SECRET="достаточно-случайная-строка"
+ uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+ ```
+ 
+ Документация OpenAPI доступна по <code>http://localhost:8000/docs</code>, а файл <code>docs/swagger/IoT_Greenhouse.yaml</code> описывает полный набор эндпоинтов и моделей.
+ 
+ ---
 
 ## 🤝 Вклад в проект
 
