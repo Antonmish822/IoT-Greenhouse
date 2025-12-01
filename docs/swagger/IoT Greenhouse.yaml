@@ -1,0 +1,545 @@
+openapi: 3.0.3
+info:
+  title: Smart Greenhouse API
+  description: |
+    API системы автоматического проветривания теплиц
+    - Бэкенд: управление устройствами, телеметрией, уведомлениями
+    - Фронтенд: веб-интерфейс для мониторинга и управления
+  version: 1.0.0
+  contact:
+    name: Smart Greenhouse Team
+    email: support@greenhouse.com
+
+servers:
+  - url: https://api.greenhouse.com/v1
+    description: Production API
+  - url: https://dev-api.greenhouse.com/v1
+    description: Development API
+
+tags:
+  - name: Authentication
+    description: Аутентификация и авторизация
+  - name: Users
+    description: Управление пользователями
+  - name: Devices
+    description: Управление устройствами теплиц
+  - name: Telemetry
+    description: Данные с датчиков
+  - name: Notifications
+    description: Управление уведомлениями
+  - name: Frontend
+    description: Эндпоинты для веб-интерфейса
+
+paths:
+
+  # ==================== АУТЕНТИФИКАЦИЯ ====================
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Регистрация нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: "securepassword123"
+                name:
+                  type: string
+                  example: "Иван Иванов"
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+        '400':
+          description: Неверные данные или пользователь уже существует
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Вход в систему
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "securepassword123"
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT токен
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  # ==================== УСТРОЙСТВА ====================
+  /devices:
+    get:
+      tags: [Devices]
+      summary: Получить список устройств пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список устройств
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Device'
+
+    post:
+      tags: [Devices]
+      summary: Добавить новое устройство
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: string
+                  description: ID устройства в ThingsBoard
+                  example: "esp32_greenhouse_001"
+                accessToken:
+                  type: string
+                  description: Токен доступа устройства
+                  example: "DEVICE_ACCESS_TOKEN_123"
+                name:
+                  type: string
+                  example: "Теплица №1"
+                location:
+                  type: string
+                  example: "Задний двор"
+      responses:
+        '201':
+          description: Устройство успешно добавлено
+        '400':
+          description: Ошибка валидации или устройство уже существует
+
+  /devices/{deviceId}:
+    get:
+      tags: [Devices]
+      summary: Получить информацию об устройстве
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Информация об устройстве
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+
+    put:
+      tags: [Devices]
+      summary: Обновить настройки устройства
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                location:
+                  type: string
+                autoMode:
+                  type: boolean
+                  description: Автоматический режим управления
+                temperatureThreshold:
+                  type: number
+                  format: float
+                  description: Порог температуры для автоматического проветривания
+      responses:
+        '200':
+          description: Настройки обновлены
+
+    delete:
+      tags: [Devices]
+      summary: Удалить устройство
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Устройство удалено
+
+  /devices/{deviceId}/control:
+    post:
+      tags: [Devices]
+      summary: Управление устройством вручную
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [open_window, close_window, stop]
+                  description: Действие с форточкой
+      responses:
+        '200':
+          description: Команда отправлена
+
+  # ==================== ТЕЛЕМЕТРИЯ ====================
+  /telemetry/{deviceId}:
+    get:
+      tags: [Telemetry]
+      summary: Получить телеметрию устройства
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1h, 24h, 7d, 30d]
+            default: "24h"
+          description: Период данных
+      responses:
+        '200':
+          description: Данные телеметрии
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  temperature:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TelemetryData'
+                  humidity:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TelemetryData'
+                  windowPosition:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TelemetryData'
+
+  /telemetry/{deviceId}/current:
+    get:
+      tags: [Telemetry]
+      summary: Получить текущие показания датчиков
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Текущие данные
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  temperature:
+                    type: number
+                    format: float
+                    example: 25.5
+                  humidity:
+                    type: number
+                    format: float
+                    example: 65.2
+                  windowPosition:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                    example: 75
+                  lastUpdate:
+                    type: string
+                    format: date-time
+
+  # ==================== УВЕДОМЛЕНИЯ ====================
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Получить историю уведомлений
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+          description: Количество записей
+      responses:
+        '200':
+          description: Список уведомлений
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+
+  /notifications/settings:
+    get:
+      tags: [Notifications]
+      summary: Получить настройки уведомлений
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Настройки уведомлений
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettings'
+
+    put:
+      tags: [Notifications]
+      summary: Обновить настройки уведомлений
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationSettings'
+      responses:
+        '200':
+          description: Настройки обновлены
+
+  # ==================== ФРОНТЕНД ====================
+  /frontend/dashboard:
+    get:
+      tags: [Frontend]
+      summary: Данные для главной страницы
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Данные дашборда
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  devices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeviceWithTelemetry'
+                  recentNotifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+
+  /frontend/device/{deviceId}/page:
+    get:
+      tags: [Frontend]
+      summary: Данные для страницы устройства
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Данные страницы устройства
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device:
+                    $ref: '#/components/schemas/Device'
+                  currentTelemetry:
+                    type: object
+                  telemetryHistory:
+                    type: object
+                  deviceEvents:
+                    type: array
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+        deviceId:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        autoMode:
+          type: boolean
+          default: true
+        temperatureThreshold:
+          type: number
+          format: float
+          example: 28.0
+        isOnline:
+          type: boolean
+          description: Онлайн статус устройства
+        createdAt:
+          type: string
+          format: date-time
+
+    DeviceWithTelemetry:
+      allOf:
+        - $ref: '#/components/schemas/Device'
+        - type: object
+          properties:
+            currentTemperature:
+              type: number
+              format: float
+            currentHumidity:
+              type: number
+              format: float
+            lastUpdate:
+              type: string
+              format: date-time
+
+    TelemetryData:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [temperature_alert, humidity_alert, device_offline, window_status]
+        title:
+          type: string
+        message:
+          type: string
+        deviceId:
+          type: string
+        read:
+          type: boolean
+          default: false
+        createdAt:
+          type: string
+          format: date-time
+
+    NotificationSettings:
+      type: object
+      properties:
+        emailNotifications:
+          type: boolean
+          default: true
+        telegramNotifications:
+          type: boolean
+          default: false
+        telegramChatId:
+          type: string
+        criticalTemperature:
+          type: boolean
+          default: true
+        deviceOffline:
+          type: boolean
+          default: true
+        windowOperations:
+          type: boolean
+          default: false
