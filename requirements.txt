@@ -1,0 +1,10 @@
+# Dependencies mirrored from pyproject.toml
+fastapi>=0.110
+uvicorn[standard]>=0.24
+sqlmodel>=0.0.7
+python-jose>=3.2
+passlib[bcrypt]>=1.7
+bcrypt<4
+pydantic[email]>=2.12
+pydantic-settings>=2.1
+python-multipart>=0.0.6
