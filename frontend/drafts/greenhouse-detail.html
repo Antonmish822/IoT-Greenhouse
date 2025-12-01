@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Теплица на даче — Умная теплица</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="greenhouse-detail.css" />
+</head>
+<body>
+  <!-- Боковое меню -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="fas fa-leaf"></i>
+      <span>Умная теплица</span>
+    </div>
+    <a href="dashboard.html" class="nav-item">
+      <i class="fas fa-home"></i>
+      <span>Панель управления</span>
+    </a>
+    <a href="#" class="nav-item active">
+      <i class="fas fa-leaf"></i>
+      <span>Теплица на даче</span>
+    </a>
+  </aside>
+
+  <!-- Основной контент -->
+  <main class="main">
+    <header class="header">
+      <div class="breadcrumb">
+        <a href="dashboard.html">Панель управления</a>
+        <span>/</span>
+        <span>Теплица на даче</span>
+      </div>
+      <div class="user-info">
+        <div class="user-avatar">И</div>
+        <span>Иван Петров</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <h1 class="page-title">
+        Теплица на даче
+        <span class="status-badge">Онлайн</span>
+      </h1>
+
+      <!-- Текущие показатели -->
+      <section class="section">
+        <h2 class="section-title">Текущие показатели</h2>
+        <div class="metrics">
+          <div class="metric-card">
+            <div class="metric-value">26.5°C</div>
+            <div class="metric-label">Температура</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">68%</div>
+            <div class="metric-label">Влажность</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">100%</div>
+            <div class="metric-label">Положение привода</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Графики -->
+      <section class="section">
+        <h2 class="section-title">Графики за 24 часа</h2>
+        <div class="charts">
+          <div class="chart-placeholder">
+            <i class="fas fa-chart-line"></i> Температура
+          </div>
+          <div class="chart-placeholder">
+            <i class="fas fa-tint"></i> Влажность
+          </div>
+        </div>
+      </section>
+
+      <!-- Управление приводом -->
+      <section class="section">
+        <h2 class="section-title">Управление приводом</h2>
+        <div class="controls">
+          <button class="control-btn open">
+            <i class="fas fa-arrow-up"></i>
+            Открыть
+          </button>
+          <button class="control-btn close">
+            <i class="fas fa-arrow-down"></i>
+            Закрыть
+          </button>
+          <button class="control-btn stop">
+            <i class="fas fa-stop"></i>
+            Остановить
+          </button>
+        </div>
+
+        <!-- Режимы -->
+        <div class="mode-toggle">
+          <div class="mode-option" id="manual-mode">
+            <h4>Ручной режим</h4>
+            <p>Управление вручную</p>
+          </div>
+          <div class="mode-option active" id="auto-mode">
+            <h4>Автоматический режим</h4>
+            <p>По заданным правилам</p>
+          </div>
+        </div>
+
+        <!-- Настройки автоматики -->
+        <div id="auto-settings" class="auto-settings">
+          <div class="form-group">
+            <label for="open-threshold">Открывать при T > (°C)</label>
+            <input type="number" id="open-threshold" value="28" min="10" max="40">
+          </div>
+          <div class="form-group">
+            <label for="close-threshold">Закрывать при T < (°C)</label>
+            <input type="number" id="close-threshold" value="24" min="10" max="40">
+          </div>
+        </div>
+      </section>
+
+      <!-- История событий -->
+      <section class="section">
+        <h2 class="section-title">История событий</h2>
+        <ul class="events-list">
+          <li class="event-item">
+            <div class="event-time">22 мая, 14:30</div>
+            <div class="event-desc">Температура 31°C. Начато открывание привода.</div>
+          </li>
+          <li class="event-item">
+            <div class="event-time">22 мая, 14:32</div>
+            <div class="event-desc">Привод достиг положения 100%.</div>
+          </li>
+          <li class="event-item">
+            <div class="event-time">22 мая, 18:05</div>
+            <div class="event-desc">Температура упала до 24°C. Начато закрывание.</div>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Переключение режимов
+    document.getElementById('manual-mode').addEventListener('click', () => {
+      document.getElementById('manual-mode').classList.add('active');
+      document.getElementById('auto-mode').classList.remove('active');
+      document.getElementById('auto-settings').style.display = 'none';
+    });
+
+    document.getElementById('auto-mode').addEventListener('click', () => {
+      document.getElementById('auto-mode').classList.add('active');
+      document.getElementById('manual-mode').classList.remove('active');
+      document.getElementById('auto-settings').style.display = 'grid';
+    });
+
+    // Простая обработка кнопок
+    document.querySelectorAll('.control-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.textContent.trim();
+        alert(`Команда отправлена: ${action}`);
+      });
+    });
+  </script>
+</body>
+</html>

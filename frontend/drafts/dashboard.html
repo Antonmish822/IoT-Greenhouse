@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Умная теплица — Панель управления</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+  <!-- Боковое меню -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="fas fa-leaf"></i>
+      <span>Умная теплица</span>
+    </div>
+    <a href="dashboard.html" class="nav-item active">
+      <i class="fas fa-home"></i>
+      <span>Панель управления</span>
+    </a>
+    <a href="notifications.html" class="nav-item">
+      <i class="fas fa-bell"></i>
+      <span>Уведомления</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-chart-line"></i>
+      <span>Аналитика</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-cog"></i>
+      <span>Настройки</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-question-circle"></i>
+      <span>Поддержка</span>
+    </a>
+  </aside>
+
+  <!-- Основной контент -->
+  <main class="main">
+    <header class="header">
+      <h1 class="page-title">Панель управления</h1>
+      <div class="user-info">
+        <div class="user-avatar">И</div>
+        <span>Иван Петров</span>
+      </div>
+      <!-- Внутри .header, рядом с .user-info -->
+      <div class="notifications-bell">
+        <a href="notifications.html" style="color: #555; text-decoration: none; position: relative; display: flex; align-items: center;">
+          <i class="fas fa-bell" style="font-size: 20px;"></i>
+          <span class="notification-badge">3</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="action-bar">
+        <h2 class="page-subtitle">Мои теплицы</h2>
+        <a href="add-device.html" class="btn">
+          <i class="fas fa-plus"></i>
+          Добавить устройство
+        </a>
+      </div>
+
+            <div class="greenhouses">
+        <!-- Теплица 1 -->
+        <a href="greenhouse-detail.html" class="greenhouse-card" style="text-decoration: none; color: inherit;">
+          <div class="card-header">
+            <h3 class="card-title">Теплица на даче</h3>
+            <span class="status online">Онлайн</span>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-value">26.5°C</div>
+              <div class="metric-label">Температура</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">68%</div>
+              <div class="metric-label">Влажность</div>
+            </div>
+          </div>
+          <div class="actuator-status">
+            <i class="fas fa-window-maximize"></i>
+            <span>Открыто (100%)</span>
+          </div>
+        </a>
+
+        <!-- Теплица 2 -->
+        <div class="greenhouse-card">
+          <div class="card-header">
+            <h3 class="card-title">Зимняя теплица</h3>
+            <span class="status offline">Оффлайн</span>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-value">—</div>
+              <div class="metric-label">Температура</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">—</div>
+              <div class="metric-label">Влажность</div>
+            </div>
+          </div>
+          <div class="actuator-status">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Нет данных</span>
+          </div>
+        </div>
+
+        <!-- Теплица 3 -->
+        <div class="greenhouse-card">
+          <div class="card-header">
+            <h3 class="card-title">Рассадник</h3>
+            <span class="status online">Онлайн</span>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-value">22.1°C</div>
+              <div class="metric-label">Температура</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">74%</div>
+              <div class="metric-label">Влажность</div>
+            </div>
+          </div>
+          <div class="actuator-status moving">
+            <i class="fas fa-sync-alt fa-spin"></i>
+            <span>Открывается...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Простая обработка кнопки (можно заменить на модальное окно)
+    document.getElementById('add-greenhouse').addEventListener('click', () => {
+      alert('Форма добавления новой теплицы будет открыта');
+    });
+  </script>
+</body>
+</html>

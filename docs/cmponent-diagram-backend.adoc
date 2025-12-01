@@ -1,0 +1,62 @@
+.Component Diagram: Бэкенд API
+[plantuml, backend-component-diagram, png]
+----
+@startuml
+' Стиль: C4 Components
+skinparam componentStyle rectangle
+skinparam defaultTextAlignment center
+
+package "Бэкенд API" {
+  [Auth Controller] as authCtrl
+  [Device Controller] as devCtrl
+  [Telemetry Controller] as telCtrl
+  [Notification Controller] as notifCtrl
+
+  [User Service] as userService
+  [Device Service] as deviceService
+  [Telemetry Service] as telemetryService
+  [Notification Service] as notifService
+
+  [ThingsBoard Gateway] as tbGateway
+  [Database Repository] as dbRepo
+  [External Notification Clients] as notifClients
+}
+
+' Контроллеры -> Сервисы
+authCtrl --> userService : использует
+devCtrl --> deviceService : использует
+telCtrl --> telemetryService : использует
+notifCtrl --> notifService : использует
+
+' Сервисы -> Инфраструктура
+userService --> dbRepo : читает/пишет
+deviceService --> dbRepo : читает/пишет
+deviceService --> tbGateway : вызывает API
+telemetryService --> dbRepo : читает/пишет
+telemetryService --> tbGateway : получает данные
+notifService --> dbRepo : читает настройки
+notifService --> notifClients : отправляет
+
+' Внешние системы
+dbRepo --> (PostgreSQL) : SQL
+tbGateway --> (ThingsBoard IoT) : REST API
+notifClients --> (Email / Telegram) : SMTP / Bot API
+
+' Внешние акторы
+(Веб-приложение) --> authCtrl : HTTP/JSON
+(Веб-приложение) --> devCtrl : HTTP/JSON
+(Веб-приложение) --> telCtrl : HTTP/JSON
+(Веб-приложение) --> notifCtrl : HTTP/JSON
+
+(ThingsBoard) --> telCtrl : Webhook
+@enduml
+----
+
+=== Пояснение компонентов
+
+- **Контроллеры** — обрабатывают входящие HTTP-запросы от фронтенда.
+- **Сервисы** — содержат бизнес-логику (валидация, правила автоматики).
+- **ThingsBoard Gateway** — адаптер для интеграции с IoT-платформой.
+- **Database Repository** — единая точка доступа к PostgreSQL.
+- **External Notification Clients** — интеграция с внешними сервисами уведомлений.
+

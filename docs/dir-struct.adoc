@@ -1,0 +1,65 @@
+Репозиторий организован по принципу модульности: отдельно прошивка, бэкенд, фронтенд, документация и инфраструктура. Это упрощает разработку, тестирование и развёртывание.
+
+[source, text]
+----
+smart-greenhouse/
+├── docs/                          # Документация
+│   ├── architecture.adoc          # Архитектура системы
+│   ├── hardware-spec.adoc         # Спецификация устройства
+│   ├── api-spec.yaml              # OpenAPI/Swagger спецификация
+│   └── user-guide.md              # Руководство пользователя
+│
+├── firmware/                      # Прошивка для ESP32
+│   ├── src/                       # Исходный код
+│   │   ├── main.cpp
+│   │   ├── sensors.cpp
+│   │   ├── actuator.cpp
+│   │   └── mqtt_client.cpp
+│   ├── lib/                       # Сторонние библиотеки (при необходимости)
+│   ├── platformio.ini             # Конфигурация PlatformIO
+│   └── README.md                  # Инструкция по прошивке
+│
+├── backend/                       # Серверная часть (API)
+│   ├── src/
+│   │   ├── controllers/           # Обработчики HTTP-запросов
+│   │   ├── services/              # Бизнес-логика
+│   │   ├── models/                # Модели данных
+│   │   ├── middleware/            # Аутентификация, логгирование
+│   │   ├── utils/                 # Вспомогательные функции
+│   │   └── app.js                 # Точка входа (Node.js) или main.py (Python)
+│   ├── config/                    # Конфигурация (.env, настройки ThingsBoard)
+│   ├── tests/                     # Тесты
+│   ├── package.json               # (Node.js) или requirements.txt (Python)
+│   └── Dockerfile                 # Для контейнеризации
+│
+├── frontend/                      # Веб-приложение
+│   ├── public/                    # Статические файлы
+│   ├── src/
+│   │   ├── components/            # UI-компоненты
+│   │   ├── pages/                 # Страницы приложения
+│   │   ├── services/              # API-клиенты
+│   │   ├── store/                 # Управление состоянием
+│   │   ├── styles/                # Глобальные стили
+│   │   └── App.jsx                # Корневой компонент
+│   ├── package.json
+│   └── Dockerfile
+│
+├── iot-platform/                  # Конфигурация ThingsBoard
+│   ├── rule-chains/               # Экспортированные цепочки правил
+│   ├── dashboards/                # Шаблоны дашбордов
+│   └── setup.sh                   # Скрипт развёртывания ThingsBoard CE
+│
+├── deployment/                    # Файлы для развёртывания
+│   ├── docker-compose.yml         # Локальный запуск всего стека
+│   ├── nginx.conf                 # Конфигурация reverse proxy
+│   └── k8s/                       # (опционально) манифесты Kubernetes
+│
+├── scripts/                       # Вспомогательные скрипты
+│   ├── flash-device.sh            # Прошивка ESP32 по USB
+│   └── generate-device-token.js   # Генерация Device ID/Token
+│
+├── .gitignore
+├── README.md                      # Обзор проекта, инструкция по запуску
+├── LICENSE
+└── CHANGELOG.md
+----
