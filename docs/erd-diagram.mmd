@@ -1,0 +1,49 @@
+erDiagram
+    USERS ||--o{ DEVICES : "owns"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    USERS ||--|| NOTIFICATION_SETTINGS : "has"
+    
+    USERS {
+        uuid id PK
+        string email UK
+        string password_hash
+        string name
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    DEVICES {
+        uuid id PK
+        string device_id UK
+        string access_token UK
+        uuid user_id FK
+        string name
+        string location
+        boolean auto_mode
+        float temperature_threshold
+        boolean is_online
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        uuid device_id FK
+        string type
+        string title
+        text message
+        boolean read
+        timestamp created_at
+    }
+    
+    NOTIFICATION_SETTINGS {
+        uuid user_id PK
+        boolean email_notifications
+        boolean telegram_notifications
+        string telegram_chat_id
+        boolean critical_temperature
+        boolean device_offline
+        boolean window_operations
+        timestamp updated_at
+    }
