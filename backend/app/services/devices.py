@@ -93,7 +93,7 @@ def create_device(session: Session, user_id: int, payload: DeviceCreate) -> Devi
     device = Device(
         name=payload.name,
         serial_number=payload.serial_number,
-        metadata=payload.metadata,
+        device_metadata=payload.metadata,
         user_id=user_id,
         last_seen=datetime.utcnow(),
     )
@@ -106,7 +106,7 @@ def update_device(session: Session, device: Device, payload: DeviceUpdate) -> De
         device.name = payload.name
         updated = True
     if payload.metadata is not None:
-        device.metadata = payload.metadata
+        device.device_metadata = payload.metadata
         updated = True
     if payload.is_active is not None:
         device.is_active = payload.is_active
