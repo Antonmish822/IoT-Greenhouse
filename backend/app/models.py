@@ -1,11 +1,32 @@
-from typing import Optional
+from __future__ import annotations
 
-from sqlmodel import SQLModel, Field
+from datetime import datetime
+from typing import Any, Dict, Optional
+
+from sqlalchemy import Column, JSON
+from pydantic import ConfigDict
+from sqlmodel import Field, SQLModel
 
 
 class User(SQLModel, table=True):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(sa_column_kwargs={"unique": True}, index=True, nullable=False)
     full_name: str = Field(default="")
     hashed_password: str
     is_active: bool = Field(default=True)
+
+
+class Device(SQLModel, table=True):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    serial_number: str = Field(sa_column_kwargs={"unique": True}, index=True, nullable=False)
+    is_active: bool = Field(default=True)
+    last_seen: Optional[datetime] = Field(default=None)
+    device_metadata: Optional[Dict[str, Any]] = Field(
+        default=None, alias="metadata", sa_column=Column("metadata", JSON)
+    )
+    user_id: int = Field(foreign_key="user.id")
