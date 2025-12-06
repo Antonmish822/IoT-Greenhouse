@@ -6,12 +6,13 @@
 
 ### Модульная организация
 
-- `controllers/` — FastAPI-роутеры по доменам (`auth`, `profile` и будущие компоненты `devices`, `telemetry`, `notifications`). Отвечают за HTTP-интерфейс и делегируют работу в сервисы.
+- `controllers/` — FastAPI-роутеры по доменам (`auth`, `profile` и компоненты `devices`, `telemetry`, `notifications`). Отвечают за HTTP-интерфейс и делегируют работу в сервисы.
 - `services/` — бизнес-логика, инкапсулирующая взаимодействие с репозиториями, правила обработки данных и формирование результатов.
-- `security.py` — JWT, OAuth2PasswordBearer, хэширование паролей и зависимость `get_current_user`.
+- `repositories/` — низкоуровневый доступ к данным и CRUD-операции, например [`backend/app/repositories/devices.py`](backend/app/repositories/devices.py:1-57).
+- `security.py` — JWT, `OAuth2PasswordBearer`, хэширование паролей и зависимость `get_current_user`.
 - `database.py` — создание `engine`, инициализация `SQLModel` и генератор сессий `get_session`.
 - `models.py`, `schemas.py` — описанные через `SQLModel` и `Pydantic` сущности для CRUD и DTO.
-- `config.py` — настройки через `pydantic_settings`, включая секреты и URL базы.
+- `config.py` — настройки через `pydantic_settings`, включая секреты, URL базы и параметры ThingsBoard.
 - `controllers/__init__.py` — агрегирует роутеры для единой регистрации в `main.py`.
 
 Новая структура позволяет добавлять компоненты путём создания новых контроллеров и сервисов без модификации существующих слоёв.
@@ -35,7 +36,15 @@
 1. `/auth/register` — регистрация нового пользователя с хэшированием пароля и созданием записи в БД.
 2. `/auth/login` — проверка email/пароля, генерация JWT и возврат `UserRead`.
 3. `/profile` (GET/PUT) — получение и обновление профиля авторизованного пользователя, включая смену имени и пароля.
-4. Все приватные маршруты защищены зависимостью `get_current_user`, которая декодирует токен и ищет пользователя в базе.
+4. `/devices` — CRUD для устройств: контроллер [`backend/app/controllers/devices.py`](backend/app/controllers/devices.py:1-67) работает через сервис [`backend/app/services/devices.py`](backend/app/services/devices.py:1-123) и репозиторий [`backend/app/repositories/devices.py`](backend/app/repositories/devices.py:1-57).
+5. Все приватные маршруты защищены зависимостью `get_current_user`, которая декодирует токен и ищет пользователя в базе.
+
+### Устройства
+
+- `Device` описана в [`backend/app/models.py`](backend/app/models.py:21-32) с полем `device_metadata`, мапящимся на колонку `metadata`, чтобы избежать конфликта с системным `SQLAlchemy.MetaData`.
+- DTO для устройств (`DeviceCreate`, `DeviceRead`, `DeviceUpdate`) находятся в [`backend/app/schemas/device.py`](backend/app/schemas/device.py:1-68) и поддерживают псевдоним `metadata`, используемый клиентом API.
+- Сервис [`backend/app/services/devices.py`](backend/app/services/devices.py:1-123) использует `[persistence logic](backend/app/repositories/devices.py:1-57)`, валидирует уникальность `serial_number`, а перед сохранением проверяет устройство на существование в ThingsBoard (`_verify_device_on_thingsboard` и `_get_thingsboard_token`).
+- Метаданные устройства сохраняются как JSON через `device_metadata`, при обновлениях сервис сохраняет только изменённые поля.
 
 ### База данных и миграции
 
@@ -50,8 +59,8 @@
 
 В результате сервис будет доступен по адресу `http://127.0.0.1:8000`, а схема API автоматически выставляется по `/docs` и `/redoc`.
 
-## Безопасность и конфигурация
+## Безопасность и конфигурацию
 
-- Параметры JWT (`jwt_secret`, `jwt_algorithm`, срок жизни) и база данных настраиваются в [`backend/app/config.py`](backend/app/config.py:1-9).
+- Параметры JWT (`jwt_secret`, `jwt_algorithm`, срок жизни), база данных и ThingsBoard (`thingsboard_url`, `thingsboard_login_path`, `thingsboard_device_check_path`, `thingsboard_username`, `thingsboard_password`, `thingsboard_token`) настраиваются в [`backend/app/config.py`](backend/app/config.py:1-19). Для разработки можно скопировать шаблон `.env-sample`, где описаны все переменные.
 - Хэширование паролей выполняется через `bcrypt`, а секретный ключ должен быть заменён на безопасное значение перед продом.
-- При необходимости можно адаптировать `access_token_expire_minutes` и `database_url` для разных окружений.
+- При необходимости можно адаптировать `access_token_expire_minutes` и `database_url` для разных окружений. Для проверки устройств ThingsBoard нужно обеспечить корректные URL и логин/пароль, либо задать статический `thingsboard_token`.
