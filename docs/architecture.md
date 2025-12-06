@@ -67,6 +67,13 @@ Pydantic схемы для валидации данных:
 - `GET /{deviceId}` - Получить телеметрию устройства
 - `GET /{deviceId}/current` - Получить текущие показания датчиков
 
+#### План добавления контроллера `/telemetry/{deviceId}` (без сохранения данных)
+1. **Маршрут** — FastAPI-роутер в `controllers/telemetry.py` с prefix `/telemetry`, принимающий `POST` или `PUT` (по договорённости) пакет с `deviceId`, `timestamp`, `payload`. Роутер использует зависимость `get_current_user` и `get_session`, извлекает устройство через `devices.get_device_for_user` и возвращает `404`, если нет привязки.
+2. **Сервис** — промежуточный модуль `services/telemetry.py`, получающий пакет DTO (`TelemetryPacket`) без сохранения в БД. Сервис выполняет минимальную валидацию (`device_id`, `payload`, `rum`) и делегирует пересылку.
+3. **Gateway** — адаптер `telemetry/thingsboard.py` (или `telemetry/broadcast.py`) с интерфейсом `push(device, packet)` и реализацией REST-запроса в ThingsBoard ({apply existing `_get_thingsboard_token`}) или WebSocket-рассылки клиентам.
+4. **Конфигурация** — расширить [`Settings`](backend/app/config.py:1-19) переменными `telemetry_mode`, `telemetry_ws_path`, `telemetry_thingsboard_topic`.
+5. **Документация** — раздел описывает, что данные не сохраняются, а транслируются напрямую через ThingsBoard/API/WebSocket, и объясняет, как фронтенд или другие сервисы подписываются на обновления (`/telemetry/{deviceId}` → сервис → gateway).
+
 #### Уведомления (/notifications)
 - `GET /` - Получить историю уведомлений
 - `GET /settings` - Получить настройки уведомлений

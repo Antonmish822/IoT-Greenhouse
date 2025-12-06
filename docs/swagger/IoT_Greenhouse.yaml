@@ -246,47 +246,7 @@ paths:
   /telemetry/{deviceId}:
     get:
       tags: [Telemetry]
-      summary: Получить телеметрию устройства
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: deviceId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: period
-          in: query
-          schema:
-            type: string
-            enum: [1h, 24h, 7d, 30d]
-            default: "24h"
-          description: Период данных
-      responses:
-        '200':
-          description: Данные телеметрии
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  temperature:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/TelemetryData'
-                  humidity:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/TelemetryData'
-                  windowPosition:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/TelemetryData'
-
-  /telemetry/{deviceId}/current:
-    get:
-      tags: [Telemetry]
-      summary: Получить текущие показания датчиков
+      summary: Получить актуальную телеметрию устройства (на основе ThingsBoard)
       security:
         - bearerAuth: []
       parameters:
@@ -297,28 +257,15 @@ paths:
             type: string
       responses:
         '200':
-          description: Текущие данные
+          description: Телеметрия устройства
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  temperature:
-                    type: number
-                    format: float
-                    example: 25.5
-                  humidity:
-                    type: number
-                    format: float
-                    example: 65.2
-                  windowPosition:
-                    type: integer
-                    minimum: 0
-                    maximum: 100
-                    example: 75
-                  lastUpdate:
-                    type: string
-                    format: date-time
+                $ref: '#/components/schemas/TelemetryRead'
+        '404':
+          description: Устройство не найдено или не принадлежит пользователю
+        '502':
+          description: Ошибка при запросе телеметрии из ThingsBoard
 
   # ==================== УВЕДОМЛЕНИЯ ====================
   /notifications:
@@ -493,14 +440,33 @@ components:
               type: string
               format: date-time
 
-    TelemetryData:
+    TelemetrySample:
       type: object
       properties:
-        timestamp:
-          type: string
-          format: date-time
+        ts:
+          type: integer
+          description: UNIX timestamp в миллисекундах
         value:
           type: number
+          description: Значение метрики
+
+    TelemetryRead:
+      type: object
+      properties:
+        device_id:
+          type: integer
+        serial_number:
+          type: string
+        telemetry:
+          type: object
+          description: Карта «метка → список измерений»
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/TelemetrySample'
+        retrieved_at:
+          type: string
+          format: date-time
 
     Notification:
       type: object
