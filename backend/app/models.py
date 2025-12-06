@@ -27,6 +27,6 @@ class Device(SQLModel, table=True):
     is_active: bool = Field(default=True)
     last_seen: Optional[datetime] = Field(default=None)
     device_metadata: Optional[Dict[str, Any]] = Field(
-        default=None, alias="metadata", sa_column=Column("metadata", JSON)
+        default=None, sa_column=Column("metadata", JSON)
     )
     user_id: int = Field(foreign_key="user.id")
