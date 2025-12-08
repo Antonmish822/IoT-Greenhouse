@@ -11,9 +11,11 @@ from ..repositories.devices import (
     get_by_serial,
     get_for_user,
     list_for_user,
+    list_for_user_and_greenhouse,
     save as persist_device,
 )
 from ..schemas.device import DeviceCreate, DeviceUpdate
+from ..services.greenhouses import get_greenhouse_for_user
 
 settings = Settings()
 
@@ -78,6 +80,15 @@ def _verify_device_on_thingsboard(serial_number: str) -> None:
         raise ValueError("Device not registered on ThingsBoard")
 
 
+def _ensure_greenhouse_belongs_to_user(
+    session: Session, user_id: int, greenhouse_id: int | None
+) -> None:
+    if greenhouse_id is None:
+        return
+    if not get_greenhouse_for_user(session, user_id, greenhouse_id):
+        raise ValueError("Greenhouse not found for current user")
+
+
 def get_device_for_user(session: Session, user_id: int, device_id: int) -> Device | None:
     return get_for_user(session, user_id, device_id)
 
@@ -86,15 +97,23 @@ def get_devices_for_user(session: Session, user_id: int) -> Iterable[Device]:
     return list_for_user(session, user_id)
 
 
+def list_devices_for_greenhouse(
+    session: Session, user_id: int, greenhouse_id: int
+) -> Iterable[Device]:
+    return list_for_user_and_greenhouse(session, user_id, greenhouse_id)
+
+
 def create_device(session: Session, user_id: int, payload: DeviceCreate) -> Device:
     if _get_device_by_serial(session, payload.serial_number):
         raise ValueError("Device with this serial number already exists")
     _verify_device_on_thingsboard(payload.serial_number)
+    _ensure_greenhouse_belongs_to_user(session, user_id, payload.greenhouse_id)
     device = Device(
         name=payload.name,
         serial_number=payload.serial_number,
         device_metadata=payload.metadata,
         user_id=user_id,
+        greenhouse_id=payload.greenhouse_id,
         last_seen=datetime.utcnow(),
     )
     return persist_device(session, device)
@@ -113,6 +132,12 @@ def update_device(session: Session, device: Device, payload: DeviceUpdate) -> De
         updated = True
     if payload.last_seen is not None:
         device.last_seen = payload.last_seen
+        updated = True
+    if payload.greenhouse_id is not None:
+        _ensure_greenhouse_belongs_to_user(
+            session, device.user_id, payload.greenhouse_id
+        )
+        device.greenhouse_id = payload.greenhouse_id
         updated = True
     if updated:
         return persist_device(session, device)

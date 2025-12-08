@@ -10,6 +10,7 @@ class DeviceCreate(BaseModel):
     name: str
     serial_number: str
     metadata: Optional[Dict[str, Any]] = None
+    greenhouse_id: Optional[int] = None
 
 
 class DeviceUpdate(BaseModel):
@@ -17,6 +18,7 @@ class DeviceUpdate(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
     is_active: Optional[bool] = None
     last_seen: Optional[datetime] = None
+    greenhouse_id: Optional[int] = None
 
 
 class DeviceRead(BaseModel):
@@ -28,4 +30,5 @@ class DeviceRead(BaseModel):
     is_active: bool
     last_seen: Optional[datetime]
     metadata: Optional[Dict[str, Any]] = Field(alias="device_metadata")
+    greenhouse_id: Optional[int] = None
     user_id: int
