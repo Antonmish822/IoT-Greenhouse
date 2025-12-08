@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Умная теплица — Вход</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'main/css/login.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Стили для табов */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            background: #f5f5f5;
+            border: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #4CAF50;
+            color: white;
+            border-bottom: 3px solid #388E3C;
+        }
+        
+        .tab:not(.active):hover {
+            background: #e0e0e0;
+        }
+        
+        .form-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        
+        .form-footer a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1>Умная теплица</h1>
+        <p>Автоматическое проветривание, контроль климата и удалённое управление.</p>
+    </div>
+
+    <div class="form-section">
+        <div class="tabs">
+            <div class="tab active" id="login-tab">Вход</div>
+            <div class="tab" id="register-tab">Регистрация</div>
+        </div>
+
+        <!-- Сообщения об ошибках -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert" style="background:#ff4444;color:white;padding:10px;margin:10px 0;border-radius:5px;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Форма входа -->
+        <form id="login-form" method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="login">
+            <div class="form-group">
+                <label>Электронная почта</label>
+                <input type="email" name="email" required placeholder="example@mail.com">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" name="password" required placeholder="Введите пароль">
+            </div>
+            <button type="submit" class="btn">Войти</button>
+        </form>
+
+        <!-- Форма регистрации -->
+        <form id="register-form" method="post" action="{% url 'login' %}" style="display:none;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="register">
+            <div class="form-group">
+                <label>Имя</label>
+                <input type="text" name="name" required placeholder="Иван Петров">
+            </div>
+            <div class="form-group">
+                <label>Электронная почта</label>
+                <input type="email" name="email" required placeholder="example@mail.com">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" name="password1" required minlength="6" placeholder="Не менее 6 символов">
+            </div>
+            <div class="form-group">
+                <label>Подтвердите пароль</label>
+                <input type="password" name="password2" required minlength="6" placeholder="Повторите пароль">
+            </div>
+            <button type="submit" class="btn">Зарегистрироваться</button>
+        </form>
+
+        <div class="form-footer">
+            <p id="footer-text">Нет аккаунта? <a href="#" id="switch-tab-link">Создать</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Простое переключение между вкладками
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginTab = document.getElementById('login-tab');
+        const registerTab = document.getElementById('register-tab');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const switchTabLink = document.getElementById('switch-tab-link');
+        const footerText = document.getElementById('footer-text');
+        
+        // Функция для показа формы входа
+        function showLoginForm() {
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            footerText.innerHTML = 'Нет аккаунта? <a href="#" id="switch-tab-link">Создать</a>';
+            
+            // Обновляем обработчик для ссылки
+            const newLink = document.getElementById('switch-tab-link');
+            newLink.onclick = showRegisterForm;
+        }
+        
+        // Функция для показа формы регистрации
+        function showRegisterForm(e) {
+            if (e) e.preventDefault();
+            loginTab.classList.remove('active');
+            registerTab.classList.add('active');
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            footerText.innerHTML = 'Уже есть аккаунт? <a href="#" id="switch-tab-link">Войти</a>';
+            
+            // Обновляем обработчик для ссылки
+            const newLink = document.getElementById('switch-tab-link');
+            newLink.onclick = showLoginForm;
+        }
+        
+        // Обработчики для табов
+        loginTab.onclick = showLoginForm;
+        registerTab.onclick = showRegisterForm;
+        
+        // Обработчик для ссылки внизу формы
+        switchTabLink.onclick = showRegisterForm;
+        
+        // Обработка отправки формы входа (AJAX)
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const email = formData.get('email');
+            const password = formData.get('password');
+            
+            // Показываем индикатор загрузки
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Вход...';
+            submitBtn.disabled = true;
+            
+            try {
+                // Авторизация через API
+                const response = await fetch('http://127.0.0.1:8001/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'username': email,
+                        'password': password
+                    }),
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    
+                    // Получаем информацию о пользователе
+                    try {
+                        const userResponse = await fetch('http://127.0.0.1:8001/auth/me', {
+                            headers: {
+                                'Authorization': `Bearer ${data.access_token}`
+                            }
+                        });
+                        
+                        if (userResponse.ok) {
+                            const userData = await userResponse.json();
+                            
+                            // Сохраняем профиль пользователя в localStorage
+                            const profile = {
+                                name: userData.full_name || userData.name || (userData.email ? userData.email.split('@')[0] : 'Пользователь'),
+                                email: userData.email || email
+                            };
+                            localStorage.setItem('user_profile', JSON.stringify(profile));
+                            
+                            console.log('✅ Профиль сохранен:', profile);
+                            
+                        } else {
+                            // Если не получилось получить профиль, сохраняем хотя бы email
+                            localStorage.setItem('user_profile', JSON.stringify({
+                                name: email.split('@')[0],
+                                email: email
+                            }));
+                            console.log('⚠️ Профиль сохранен только с email');
+                        }
+                    } catch (userError) {
+                        console.warn('⚠️ Не удалось получить профиль:', userError);
+                        // Сохраняем хотя бы email
+                        localStorage.setItem('user_profile', JSON.stringify({
+                            name: email.split('@')[0],
+                            email: email
+                        }));
+                    }
+                    
+                    // Редирект на dashboard
+                    window.location.href = '/dashboard/';
+                } else {
+                    alert('❌ Неверный логин или пароль');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('❌ Ошибка при входе:', error);
+                alert('❌ Ошибка при входе. Проверьте подключение к серверу.');
+                
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                
+                // Если API недоступно, отправляем форму стандартным способом
+                this.submit();
+            }
+        });
+
+        // Обработка отправки формы регистрации
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const name = formData.get('name');
+            const email = formData.get('email');
+            const password1 = formData.get('password1');
+            const password2 = formData.get('password2');
+            
+            // Проверка паролей
+            if (password1 !== password2) {
+                alert('❌ Пароли не совпадают!');
+                return;
+            }
+            
+            if (password1.length < 6) {
+                alert('❌ Пароль должен быть не менее 6 символов!');
+                return;
+            }
+            
+            // Показываем индикатор загрузки
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
+            submitBtn.disabled = true;
+            
+            try {
+                // Регистрация через API
+                const response = await fetch('http://127.0.0.1:8001/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password1,
+                        full_name: name
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('✅ Регистрация успешна! Теперь вы можете войти.');
+                    showLoginForm();
+                    // Очищаем поля регистрации
+                    document.querySelectorAll('#register-form input').forEach(input => {
+                        input.value = '';
+                    });
+                } else {
+                    try {
+                        const errorData = await response.json();
+                        alert('❌ Ошибка регистрации: ' + (errorData.detail || errorData.message || 'Неизвестная ошибка'));
+                    } catch {
+                        alert('❌ Ошибка регистрации. Попробуйте еще раз.');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Ошибка при регистрации:', error);
+                alert('❌ Ошибка при регистрации. Проверьте подключение к серверу.');
+                
+                // Если API недоступно, отправляем форму стандартным способом
+                this.submit();
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Проверяем, есть ли токен при загрузке страницы
+        // Если есть, возможно пользователь уже авторизован
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            try {
+                fetch('http://127.0.0.1:8001/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Если токен валидный, редиректим на dashboard
+                        console.log('Пользователь уже авторизован, перенаправляю...');
+                        window.location.href = '/dashboard/';
+                    }
+                })
+                .catch(() => {
+                    // Если токен не валидный, остаемся на странице входа
+                    console.log('Токен невалиден, остаюсь на странице входа');
+                });
+            } catch (error) {
+                console.log('Ошибка проверки токена:', error);
+            }
+        }
+    });
+</script>
+</body>
+</html>

@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Теплица на даче — Умная теплица</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="greenhouse-detail.css" />
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'main/css/greenhouse-detail.css' %}">
 </head>
 <body>
   <!-- Боковое меню -->
@@ -14,7 +15,7 @@
       <i class="fas fa-leaf"></i>
       <span>Умная теплица</span>
     </div>
-    <a href="dashboard.html" class="nav-item">
+    <a href="/dashboard" class="nav-item">
       <i class="fas fa-home"></i>
       <span>Панель управления</span>
     </a>
@@ -28,13 +29,19 @@
   <main class="main">
     <header class="header">
       <div class="breadcrumb">
-        <a href="dashboard.html">Панель управления</a>
+        <a href="/dashboard">Панель управления</a>
         <span>/</span>
         <span>Теплица на даче</span>
       </div>
-      <div class="user-info">
-        <div class="user-avatar">И</div>
-        <span>Иван Петров</span>
+      <div class="header-actions">
+        <a href="/add_device" class="btn">
+          <i class="fas fa-plus"></i>
+          Добавить устройство
+        </a>
+        <div class="user-info">
+          <div class="user-avatar">И</div>
+          <span>Иван Петров</span>
+        </div>
       </div>
     </header>
 

@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Уведомления — Умная теплица</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="notifications.css" />
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'main/css/notifications.css' %}">
 </head>
 <body>
   <!-- Боковое меню -->
@@ -14,11 +15,11 @@
       <i class="fas fa-leaf"></i>
       <span>Умная теплица</span>
     </div>
-    <a href="dashboard.html" class="nav-item">
+    <a href="/dashboard" class="nav-item">
       <i class="fas fa-home"></i>
       <span>Панель управления</span>
     </a>
-    <a href="notifications.html" class="nav-item active">
+    <a href="/notifications" class="nav-item active">
       <i class="fas fa-bell"></i>
       <span>Уведомления</span>
     </a>
