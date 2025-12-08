@@ -81,6 +81,13 @@
     align-items: center;
   }
   
+  .page-title {
+    margin-bottom: 24px;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--dark);
+  }
+  
   .user-info {
     display: flex;
     align-items: center;
@@ -106,6 +113,7 @@
   }
   
   .page-title {
+    padding: 5px 30px;
     margin-bottom: 24px;
     font-size: 24px;
     font-weight: 600;

@@ -329,13 +329,9 @@
       <i class="fas fa-bell"></i>
       <span>Уведомления</span>
     </a>
-    <a href="#" class="nav-item">
-      <i class="fas fa-chart-line"></i>
-      <span>Аналитика</span>
-    </a>
-    <a href="#" class="nav-item">
-      <i class="fas fa-cog"></i>
-      <span>Настройки</span>
+    <a href="/profile" class="nav-item">
+      <i class="fas fa-user"></i>
+      <span>Профиль</span>
     </a>
     <a href="#" class="nav-item">
       <i class="fas fa-question-circle"></i>
@@ -642,7 +638,7 @@
             }
           }, 300);
         }
-      }, 5000);
+      }, 3000);
       
       // Добавляем анимацию исчезновения
       if (!document.querySelector('#notification-out-styles')) {
@@ -900,7 +896,7 @@
     // Автоматическое обновление каждые 30 секунд
     setInterval(() => {
         loadGreenhouses();
-    }, 30000);
+    }, 1200000);
   </script>
 </body>
 </html>

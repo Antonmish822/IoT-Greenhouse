@@ -23,9 +23,13 @@
       <i class="fas fa-bell"></i>
       <span>Уведомления</span>
     </a>
+    <a href="/profile" class="nav-item">
+      <i class="fas fa-user"></i>
+      <span>Профиль</span>
+    </a>
     <a href="#" class="nav-item">
-      <i class="fas fa-cog"></i>
-      <span>Настройки</span>
+      <i class="fas fa-question-circle"></i>
+      <span>Поддержка</span>
     </a>
   </aside>
 
@@ -34,8 +38,8 @@
     <header class="header">
       <h1 class="page-title">Уведомления и события</h1>
       <div class="user-info">
-        <div class="user-avatar">И</div>
-        <span>Иван Петров</span>
+        <div class="user-avatar" id="header-avatar">З</div>
+        <span id="header-name">Загрузка...</span>
       </div>
     </header>
 
@@ -110,5 +114,94 @@
       </div>
     </div>
   </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Загружаем профиль пользователя
+      loadUserProfile();
+    });
+
+    // Загрузка профиля пользователя
+    async function loadUserProfile() {
+      // Сначала проверяем localStorage
+      const userProfile = JSON.parse(localStorage.getItem('user_profile'));
+      const userNameElement = document.getElementById('header-name');
+      const userAvatarElement = document.getElementById('header-avatar');
+      
+      if (userProfile && userProfile.name) {
+        // Если есть профиль в localStorage, используем его
+        if (userNameElement) userNameElement.textContent = userProfile.name;
+        if (userAvatarElement) userAvatarElement.textContent = userProfile.name.charAt(0).toUpperCase();
+      } else {
+        // Если нет, пытаемся получить из API
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          try {
+            const response = await fetch('http://127.0.0.1:8001/profile/', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            if (response.ok) {
+              const userData = await response.json();
+              console.log('📋 Получены данные профиля:', userData);
+              
+              // Используем full_name из API
+              let fullName = '';
+              
+              if (userData.full_name && userData.full_name.trim() !== '') {
+                fullName = userData.full_name;
+              } else if (userData.email) {
+                fullName = userData.email.split('@')[0];
+              } else {
+                fullName = 'Пользователь';
+              }
+              
+              // Сохраняем профиль
+              const profile = {
+                name: fullName,
+                email: userData.email || '',
+                fullData: userData
+              };
+              localStorage.setItem('user_profile', JSON.stringify(profile));
+              
+              // Обновляем UI
+              if (userNameElement) {
+                userNameElement.textContent = fullName;
+              }
+              
+              if (userAvatarElement) {
+                userAvatarElement.textContent = fullName.charAt(0).toUpperCase();
+              }
+            }
+          } catch (error) {
+            console.error('❌ Ошибка загрузки профиля:', error);
+            if (userNameElement) userNameElement.textContent = 'Пользователь';
+            if (userAvatarElement) userAvatarElement.textContent = 'П';
+          }
+        } else {
+          if (userNameElement) userNameElement.textContent = 'Пользователь';
+          if (userAvatarElement) userAvatarElement.textContent = 'П';
+        }
+      }
+    }
+
+    // Обработка фильтров
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Убираем активный класс у всех кнопок
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.remove('active');
+        });
+        // Добавляем активный класс к нажатой кнопке
+        btn.classList.add('active');
+        
+        // Здесь можно добавить логику фильтрации уведомлений
+        const filterType = btn.textContent.trim();
+        console.log('Фильтр:', filterType);
+      });
+    });
+  </script>
 </body>
 </html>

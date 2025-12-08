@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Мой профиль — Умная теплица</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'main/css/profile.css' %}">
+</head>
+<body>
+  <!-- Боковое меню -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="fas fa-leaf"></i>
+      <span>Умная теплица</span>
+    </div>
+    <a href="/dashboard" class="nav-item">
+      <i class="fas fa-home"></i>
+      <span>Панель управления</span>
+    </a>
+    <a href="/notifications" class="nav-item">
+        <i class="fas fa-bell"></i>
+        <span>Уведомления</span>
+    </a>
+    <a href="/profile" class="nav-item active">
+      <i class="fas fa-user"></i>
+      <span>Профиль</span>
+    </a>
+    <a href="#" class="nav-item">
+        <i class="fas fa-question-circle"></i>
+        <span>Поддержка</span>
+      </a>
+  </aside>
+
+  <!-- Основной контент -->
+  <main class="main">
+    <header class="header">
+        <h1 class="page-title">Профиль</h1>
+        <div class="user-info">
+          <div class="user-avatar" id="header-avatar">З</div>
+          <span id="header-name">Загрузка...</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="profile-container">
+        <!-- Сообщения -->
+        <div class="message" id="success-message"></div>
+        <div class="message" id="error-message"></div>
+
+        <!-- Заголовок профиля -->
+        <div class="profile-header">
+          <div class="profile-avatar" id="profile-avatar">З</div>
+          <div class="profile-info">
+            <h1 id="profile-name">Загрузка...</h1>
+            <p id="profile-email">Загрузка...</p>
+          </div>
+        </div>
+
+        <!-- Основная информация -->
+        <div class="settings-section">
+          <h2 class="settings-title">
+            <i class="fas fa-user-edit"></i>
+            Основная информация
+          </h2>
+          
+          <form id="profile-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="full-name">Имя и фамилия</label>
+                <input type="text" id="full-name" placeholder="Введите ваше имя">
+              </div>
+              <div class="form-group">
+                <label for="email">Электронная почта</label>
+                <input type="email" id="email" disabled>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="submit" class="btn">
+                <i class="fas fa-save"></i> Сохранить изменения
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Смена пароля -->
+        <div class="settings-section">
+          <h2 class="settings-title">
+            <i class="fas fa-key"></i>
+            Смена пароля
+          </h2>
+          
+          <form id="password-form">
+            <div class="form-group">
+              <label for="current-password">Текущий пароль</label>
+              <input type="password" id="current-password" placeholder="Введите текущий пароль" required>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="new-password">Новый пароль</label>
+                <input type="password" id="new-password" placeholder="Введите новый пароль" required minlength="6">
+              </div>
+              <div class="form-group">
+                <label for="confirm-password">Повторите новый пароль</label>
+                <input type="password" id="confirm-password" placeholder="Повторите новый пароль" required minlength="6">
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="submit" class="btn">
+                <i class="fas fa-key"></i> Изменить пароль
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Выход из аккаунта -->
+        <div class="settings-section logout-section">
+          <h2 class="settings-title">
+            <i class="fas fa-sign-out-alt"></i>
+            Выход из аккаунта
+          </h2>
+          
+          <p class="section-description">Выйти из аккаунта на этом устройстве. Для входа потребуется снова ввести пароль.</p>
+          
+          <div class="logout-actions">
+            <button class="logout-btn" id="logout-btn">
+              <i class="fas fa-sign-out-alt"></i>
+              Выйти из аккаунта
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Модальное окно подтверждения выхода -->
+  <div class="modal" id="logout-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Подтверждение выхода</h3>
+      <p class="modal-text">Вы уверены, что хотите выйти из аккаунта? Для входа потребуется снова ввести пароль.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-logout-btn">Отмена</button>
+        <button type="button" class="btn" id="confirm-logout-btn">
+          <i class="fas fa-sign-out-alt"></i> Выйти
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Глобальные переменные
+    let userData = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Загружаем данные профиля
+      loadUserProfile();
+      
+      // Инициализируем обработчики событий
+      initEventHandlers();
+      
+      // Инициализируем модальное окно
+      initModal();
+    });
+
+    // Загрузка профиля пользователя
+    async function loadUserProfile() {
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        redirectToLogin();
+        return;
+      }
+      
+      try {
+        const response = await fetch('http://127.0.0.1:8001/profile/', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          userData = await response.json();
+          updateProfileUI(userData);
+        } else if (response.status === 401) {
+          redirectToLogin();
+        } else {
+          showError('Ошибка загрузки профиля');
+        }
+      } catch (error) {
+        console.error('❌ Ошибка загрузки профиля:', error);
+        showError('Ошибка подключения к серверу');
+      }
+    }
+
+    // Обновление UI с данными профиля
+    function updateProfileUI(data) {
+      // Основная информация
+      document.getElementById('full-name').value = data.full_name || '';
+      document.getElementById('email').value = data.email || '';
+      
+      // Заголовок профиля
+      const displayName = data.full_name || data.email.split('@')[0] || 'Пользователь';
+      const avatarLetter = displayName.charAt(0).toUpperCase();
+      
+      document.getElementById('profile-name').textContent = displayName;
+      document.getElementById('profile-email').textContent = data.email || '';
+      document.getElementById('profile-avatar').textContent = avatarLetter;
+      document.getElementById('header-name').textContent = displayName;
+      document.getElementById('header-avatar').textContent = avatarLetter;
+      
+      // Сохраняем в localStorage
+      const profile = {
+        name: displayName,
+        email: data.email || '',
+        fullData: data
+      };
+      localStorage.setItem('user_profile', JSON.stringify(profile));
+    }
+
+    // Инициализация обработчиков событий
+    function initEventHandlers() {
+      // Форма профиля
+      document.getElementById('profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await updateProfile();
+      });
+      
+      // Форма смены пароля
+      document.getElementById('password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await changePassword();
+      });
+    }
+
+    // Инициализация модального окна
+    function initModal() {
+      const logoutModal = document.getElementById('logout-modal');
+      const logoutBtn = document.getElementById('logout-btn');
+      const cancelBtn = document.getElementById('cancel-logout-btn');
+      const confirmBtn = document.getElementById('confirm-logout-btn');
+      
+      // Открытие модального окна
+      logoutBtn.addEventListener('click', () => {
+        logoutModal.style.display = 'flex';
+      });
+      
+      // Закрытие модального окна
+      cancelBtn.addEventListener('click', () => {
+        logoutModal.style.display = 'none';
+      });
+      
+      // Подтверждение выхода
+      confirmBtn.addEventListener('click', () => {
+        logout();
+      });
+      
+      // Закрытие по клику вне модального окна
+      window.addEventListener('click', (event) => {
+        if (event.target === logoutModal) {
+          logoutModal.style.display = 'none';
+        }
+      });
+      
+      // Закрытие по Escape
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && logoutModal.style.display === 'flex') {
+          logoutModal.style.display = 'none';
+        }
+      });
+    }
+
+    // Обновление профиля
+    async function updateProfile() {
+      const fullName = document.getElementById('full-name').value.trim();
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        showError('Требуется авторизация');
+        redirectToLogin();
+        return;
+      }
+      
+      try {
+        const response = await fetch('http://127.0.0.1:8001/profile/', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            full_name: fullName || null
+          })
+        });
+        
+        if (response.ok) {
+          const updatedData = await response.json();
+          userData = updatedData;
+          updateProfileUI(updatedData);
+          showSuccess('Профиль успешно обновлен');
+        } else {
+          const errorData = await response.json();
+          console.error('Ошибка обновления профиля:', errorData);
+          showError('Не удалось обновить профиль');
+        }
+      } catch (error) {
+        console.error('❌ Ошибка обновления профиля:', error);
+        showError('Ошибка подключения к серверу');
+      }
+    }
+
+    // Смена пароля
+    async function changePassword() {
+      const currentPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      // Валидация
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        showError('Заполните все поля');
+        return;
+      }
+      
+      if (newPassword.length < 6) {
+        showError('Новый пароль должен содержать минимум 6 символов');
+        return;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        showError('Новые пароли не совпадают');
+        return;
+      }
+      
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        showError('Требуется авторизация');
+        redirectToLogin();
+        return;
+      }
+      
+      try {
+        const response = await fetch('http://127.0.0.1:8001/profile/', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            password: newPassword
+          })
+        });
+        
+        if (response.ok) {
+          showSuccess('Пароль успешно изменен');
+          // Очищаем форму
+          document.getElementById('password-form').reset();
+        } else if (response.status === 401) {
+          showError('Неверный текущий пароль');
+        } else {
+          const errorData = await response.json();
+          console.error('Ошибка смены пароля:', errorData);
+          showError('Не удалось изменить пароль');
+        }
+      } catch (error) {
+        console.error('❌ Ошибка смены пароля:', error);
+        showError('Ошибка подключения к серверу');
+      }
+    }
+
+    // Выход из аккаунта
+    function logout() {
+      // Удаляем токен и профиль из localStorage
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user_profile');
+      
+      // Перенаправляем на страницу входа
+      window.location.href = '/';
+    }
+
+    // Показать успешное сообщение
+    function showSuccess(message) {
+      const successEl = document.getElementById('success-message');
+      successEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+      successEl.className = 'message success';
+      
+      // Автоматически скрыть через 5 секунд
+      setTimeout(() => {
+        successEl.className = 'message';
+      }, 5000);
+    }
+
+    // Показать сообщение об ошибке
+    function showError(message) {
+      const errorEl = document.getElementById('error-message');
+      errorEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+      errorEl.className = 'message error';
+      
+      // Автоматически скрыть через 5 секунд
+      setTimeout(() => {
+        errorEl.className = 'message';
+      }, 5000);
+    }
+
+    // Перенаправление на страницу входа
+    function redirectToLogin() {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user_profile');
+      window.location.href = '/';
+    }
+  </script>
+</body>
+</html>
