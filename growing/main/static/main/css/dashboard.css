@@ -264,21 +264,239 @@
     }
   }
   
-  .notifications-bell {
-    margin-right: 20px;
+  /* Дополнительные стили для динамических теплиц */
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-top: 20px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: #ddd;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  margin-bottom: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.empty-state p {
+  color: #888;
+  margin-bottom: 24px;
+  max-width: 400px;
+  margin: 0 auto 24px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  grid-column: 1 / -1;
+}
+
+.loading i {
+  margin-right: 10px;
+}
+
+.greenhouse-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 12px;
+  margin: 0 auto 15px;
+  color: var(--primary);
+  font-size: 24px;
+}
+
+.greenhouse-icon i {
+  font-size: 24px;
+}
+
+.greenhouse-card-with-icon {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.greenhouse-card-with-icon:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 768px) {
+  .empty-icon {
+      font-size: 48px;
   }
   
-  .notification-badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: var(--danger);
-    color: white;
-    font-size: 10px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .empty-state {
+      padding: 40px 20px;
   }
+  
+  .greenhouse-icon {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 12px;
+  }
+  
+  .greenhouse-icon i {
+      font-size: 20px;
+  }
+}
+/* Стили для отображения местоположения теплицы в карточке */
+.greenhouse-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 15px 0;
+  color: #666;
+  font-size: 14px;
+  justify-content: center;
+  min-height: 20px;
+}
+
+.greenhouse-location i {
+  color: #888;
+  font-size: 12px;
+}
+
+.greenhouse-location.no-location {
+  color: #999;
+  font-style: italic;
+}
+
+.greenhouse-location span {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Обновление стилей карточки для лучшего отображения */
+.greenhouse-card-with-icon {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px; /* Увеличиваем высоту */
+  justify-content: space-between;
+}
+
+.greenhouse-card-with-icon:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Обновляем header карточки */
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Обновляем статус */
+.status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.status.online {
+  background: rgba(76, 175, 80, 0.15);
+  color: var(--primary);
+}
+
+.status.offline {
+  background: rgba(244, 67, 54, 0.15);
+  color: var(--danger);
+}
+
+/* Обновляем метрики */
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.metric {
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Обновляем статус привода */
+.actuator-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: #f0f7ff;
+  border-radius: 8px;
+  margin-top: auto;
+  font-size: 14px;
+  color: #333;
+}
+
+.actuator-status i {
+  color: #2196f3;
+}
+
+/* Иконка теплицы */
+.greenhouse-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 12px;
+  margin: 0 auto 15px;
+  color: var(--primary);
+  font-size: 24px;
+}

@@ -7,5 +7,6 @@ urlpatterns = [
     path('notifications/', views.notifications, name='notifications'),
     path('add_device/', views.add_device, name='add_device'),
     path('logout/', views.logout_view, name='logout'),
-    path('greenhouse_detail/', views.greenhouse_detail, name='greenhouse_detail')
+    path('greenhouse_detail/', views.greenhouse_detail, name='greenhouse_detail'),
+    path('add_greenhouse/', views.add_greenhouse, name='add_greenhouse')
 ]

@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{% static 'main/css/login.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* Стили для табов */
         .tabs {
             display: flex;
             margin-bottom: 20px;
@@ -51,6 +50,24 @@
         .form-footer a:hover {
             text-decoration: underline;
         }
+        
+        .alert-error {
+            background: #ff4444;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .alert-success {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -69,14 +86,14 @@
         <!-- Сообщения об ошибках -->
         {% if messages %}
             {% for message in messages %}
-                <div class="alert" style="background:#ff4444;color:white;padding:10px;margin:10px 0;border-radius:5px;">
+                <div class="alert-error">
                     {{ message }}
                 </div>
             {% endfor %}
         {% endif %}
 
         <!-- Форма входа -->
-        <form id="login-form" method="post" action="{% url 'login' %}">
+        <form id="login-form" method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="login">
             <div class="form-group">
@@ -91,12 +108,13 @@
         </form>
 
         <!-- Форма регистрации -->
-        <form id="register-form" method="post" action="{% url 'login' %}" style="display:none;">
+        <form id="register-form" method="post" style="display:none;">
             {% csrf_token %}
             <input type="hidden" name="action" value="register">
             <div class="form-group">
-                <label>Имя</label>
-                <input type="text" name="name" required placeholder="Иван Петров">
+                <label>Имя и фамилия</label>
+                <input type="text" name="name" required placeholder="Иван Петров" id="full-name-input">
+                <small style="color: #666;">Это имя будет отображаться в системе</small>
             </div>
             <div class="form-group">
                 <label>Электронная почта</label>
@@ -120,7 +138,6 @@
 </div>
 
 <script>
-    // Простое переключение между вкладками
     document.addEventListener('DOMContentLoaded', function() {
         const loginTab = document.getElementById('login-tab');
         const registerTab = document.getElementById('register-tab');
@@ -128,6 +145,7 @@
         const registerForm = document.getElementById('register-form');
         const switchTabLink = document.getElementById('switch-tab-link');
         const footerText = document.getElementById('footer-text');
+        const fullNameInput = document.getElementById('full-name-input');
         
         // Функция для показа формы входа
         function showLoginForm() {
@@ -137,7 +155,6 @@
             registerForm.style.display = 'none';
             footerText.innerHTML = 'Нет аккаунта? <a href="#" id="switch-tab-link">Создать</a>';
             
-            // Обновляем обработчик для ссылки
             const newLink = document.getElementById('switch-tab-link');
             newLink.onclick = showRegisterForm;
         }
@@ -151,7 +168,6 @@
             registerForm.style.display = 'block';
             footerText.innerHTML = 'Уже есть аккаунт? <a href="#" id="switch-tab-link">Войти</a>';
             
-            // Обновляем обработчик для ссылки
             const newLink = document.getElementById('switch-tab-link');
             newLink.onclick = showLoginForm;
         }
@@ -159,11 +175,9 @@
         // Обработчики для табов
         loginTab.onclick = showLoginForm;
         registerTab.onclick = showRegisterForm;
-        
-        // Обработчик для ссылки внизу формы
         switchTabLink.onclick = showRegisterForm;
         
-        // Обработка отправки формы входа (AJAX)
+        // Обработка отправки формы входа
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -178,7 +192,7 @@
             submitBtn.disabled = true;
             
             try {
-                // Авторизация через API
+                // 1. Авторизация через API
                 const response = await fetch('http://127.0.0.1:8001/auth/login', {
                     method: 'POST',
                     headers: {
@@ -191,63 +205,65 @@
                     credentials: 'include'
                 });
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem('access_token', data.access_token);
+                if (!response.ok) {
+                    throw new Error('Неверный логин или пароль');
+                }
+                
+                const data = await response.json();
+                const token = data.access_token;
+                
+                if (!token) {
+                    throw new Error('Токен не получен');
+                }
+                
+                localStorage.setItem('access_token', token);
+                
+                // 2. Получаем профиль пользователя через правильный endpoint
+                const profileResponse = await fetch('http://127.0.0.1:8001/profile/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!profileResponse.ok) {
+                    console.warn('Не удалось получить профиль, используем email');
+                    localStorage.setItem('user_profile', JSON.stringify({
+                        name: email.split('@')[0],
+                        email: email
+                    }));
+                } else {
+                    const userData = await profileResponse.json();
+                    console.log('Получен профиль:', userData);
                     
-                    // Получаем информацию о пользователе
-                    try {
-                        const userResponse = await fetch('http://127.0.0.1:8001/auth/me', {
-                            headers: {
-                                'Authorization': `Bearer ${data.access_token}`
-                            }
-                        });
-                        
-                        if (userResponse.ok) {
-                            const userData = await userResponse.json();
-                            
-                            // Сохраняем профиль пользователя в localStorage
-                            const profile = {
-                                name: userData.full_name || userData.name || (userData.email ? userData.email.split('@')[0] : 'Пользователь'),
-                                email: userData.email || email
-                            };
-                            localStorage.setItem('user_profile', JSON.stringify(profile));
-                            
-                            console.log('✅ Профиль сохранен:', profile);
-                            
-                        } else {
-                            // Если не получилось получить профиль, сохраняем хотя бы email
-                            localStorage.setItem('user_profile', JSON.stringify({
-                                name: email.split('@')[0],
-                                email: email
-                            }));
-                            console.log('⚠️ Профиль сохранен только с email');
-                        }
-                    } catch (userError) {
-                        console.warn('⚠️ Не удалось получить профиль:', userError);
-                        // Сохраняем хотя бы email
-                        localStorage.setItem('user_profile', JSON.stringify({
-                            name: email.split('@')[0],
-                            email: email
-                        }));
+                    // Используем full_name из API, если он есть и не пустой
+                    let userName = '';
+                    
+                    if (userData.full_name && userData.full_name.trim() !== '') {
+                        userName = userData.full_name;
+                    } else if (userData.name && userData.name.trim() !== '') {
+                        userName = userData.name;
+                    } else {
+                        userName = email.split('@')[0];
                     }
                     
-                    // Редирект на dashboard
-                    window.location.href = '/dashboard/';
-                } else {
-                    alert('❌ Неверный логин или пароль');
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
+                    // Сохраняем профиль
+                    localStorage.setItem('user_profile', JSON.stringify({
+                        name: userName,
+                        email: userData.email || email,
+                        fullData: userData
+                    }));
+                    
+                    console.log('✅ Профиль сохранен:', userName);
                 }
-            } catch (error) {
-                console.error('❌ Ошибка при входе:', error);
-                alert('❌ Ошибка при входе. Проверьте подключение к серверу.');
                 
+                // 3. Редирект на dashboard
+                window.location.href = '/dashboard/';
+                
+            } catch (error) {
+                console.error('Ошибка при входе:', error);
+                alert('❌ ' + error.message);
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
-                
-                // Если API недоступно, отправляем форму стандартным способом
-                this.submit();
             }
         });
 
@@ -272,6 +288,11 @@
                 return;
             }
             
+            if (!name || name.trim() === '') {
+                alert('❌ Пожалуйста, введите ваше имя');
+                return;
+            }
+            
             // Показываем индикатор загрузки
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
@@ -288,31 +309,48 @@
                     body: JSON.stringify({
                         email: email,
                         password: password1,
-                        full_name: name
+                        full_name: name.trim()
                     })
                 });
                 
                 if (response.ok) {
-                    alert('✅ Регистрация успешна! Теперь вы можете войти.');
-                    showLoginForm();
-                    // Очищаем поля регистрации
-                    document.querySelectorAll('#register-form input').forEach(input => {
-                        input.value = '';
-                    });
+                    const userData = await response.json();
+                    console.log('Регистрация успешна:', userData);
+                    
+                    // Показываем сообщение об успехе
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert-success';
+                    alertDiv.textContent = '✅ Регистрация успешна! Теперь вы можете войти.';
+                    registerForm.parentNode.insertBefore(alertDiv, registerForm);
+                    
+                    // Очищаем поля
+                    registerForm.reset();
+                    
+                    // Через 2 секунды переключаем на вкладку входа
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.parentNode.removeChild(alertDiv);
+                        }
+                        showLoginForm();
+                    }, 2000);
+                    
                 } else {
-                    try {
-                        const errorData = await response.json();
-                        alert('❌ Ошибка регистрации: ' + (errorData.detail || errorData.message || 'Неизвестная ошибка'));
-                    } catch {
-                        alert('❌ Ошибка регистрации. Попробуйте еще раз.');
+                    const errorData = await response.json();
+                    let errorMessage = 'Ошибка регистрации';
+                    
+                    if (errorData.detail) {
+                        if (Array.isArray(errorData.detail)) {
+                            errorMessage = errorData.detail.map(err => err.msg).join(', ');
+                        } else {
+                            errorMessage = errorData.detail;
+                        }
                     }
+                    
+                    alert('❌ ' + errorMessage);
                 }
             } catch (error) {
-                console.error('❌ Ошибка при регистрации:', error);
+                console.error('Ошибка при регистрации:', error);
                 alert('❌ Ошибка при регистрации. Проверьте подключение к серверу.');
-                
-                // Если API недоступно, отправляем форму стандартным способом
-                this.submit();
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -320,29 +358,22 @@
         });
         
         // Проверяем, есть ли токен при загрузке страницы
-        // Если есть, возможно пользователь уже авторизован
         const token = localStorage.getItem('access_token');
         if (token) {
-            try {
-                fetch('http://127.0.0.1:8001/auth/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        // Если токен валидный, редиректим на dashboard
-                        console.log('Пользователь уже авторизован, перенаправляю...');
-                        window.location.href = '/dashboard/';
-                    }
-                })
-                .catch(() => {
-                    // Если токен не валидный, остаемся на странице входа
-                    console.log('Токен невалиден, остаюсь на странице входа');
-                });
-            } catch (error) {
-                console.log('Ошибка проверки токена:', error);
-            }
+            fetch('http://127.0.0.1:8001/profile/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Пользователь уже авторизован, перенаправляю...');
+                    window.location.href = '/dashboard/';
+                }
+            })
+            .catch(() => {
+                // Если токен не валидный, остаемся на странице входа
+            });
         }
     });
 </script>
