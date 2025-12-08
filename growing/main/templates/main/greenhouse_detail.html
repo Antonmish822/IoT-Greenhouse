@@ -3,10 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Теплица на даче — Умная теплица</title>
+  <title id="page-title">Теплица на даче — Умная теплица</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   {% load static %}
   <link rel="stylesheet" href="{% static 'main/css/greenhouse-detail.css' %}">
+  <style>
+    /* Дополнительные стили для управления теплицей */
+    .greenhouse-actions {
+      display: flex;
+      gap: 10px;
+      margin-left: auto;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+    }
+    
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+    }
+    
+    .btn-danger:hover {
+      background: #d32f2f;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modal-title {
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: var(--dark);
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      justify-content: flex-end;
+    }
+    
+    .location-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      color: #666;
+      font-size: 15px;
+    }
+    
+    .location-info i {
+      color: #888;
+    }
+    
+    /* Стили для форм */
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+  </style>
 </head>
 <body>
   <!-- Боковое меню -->
@@ -19,9 +99,9 @@
       <i class="fas fa-home"></i>
       <span>Панель управления</span>
     </a>
-    <a href="#" class="nav-item active">
+    <a href="#" class="nav-item active" id="current-greenhouse-link">
       <i class="fas fa-leaf"></i>
-      <span>Теплица на даче</span>
+      <span id="sidebar-greenhouse-name">Теплица на даче</span>
     </a>
   </aside>
 
@@ -31,25 +111,41 @@
       <div class="breadcrumb">
         <a href="/dashboard">Панель управления</a>
         <span>/</span>
-        <span>Теплица на даче</span>
+        <span id="breadcrumb-greenhouse-name">Теплица на даче</span>
       </div>
       <div class="header-actions">
         <a href="/add_device" class="btn">
           <i class="fas fa-plus"></i>
           Добавить устройство
         </a>
+        <div class="greenhouse-actions">
+          <button class="btn btn-secondary" id="edit-greenhouse-btn">
+            <i class="fas fa-edit"></i>
+            Изменить
+          </button>
+          <button class="btn btn-danger" id="delete-greenhouse-btn">
+            <i class="fas fa-trash"></i>
+            Удалить
+          </button>
+        </div>
         <div class="user-info">
-          <div class="user-avatar">И</div>
-          <span>Иван Петров</span>
+          <div class="user-avatar" id="user-avatar">И</div>
+          <span id="user-name">Иван Петров</span>
         </div>
       </div>
     </header>
 
     <div class="content">
       <h1 class="page-title">
-        Теплица на даче
-        <span class="status-badge">Онлайн</span>
+        <span id="greenhouse-name">Теплица на даче</span>
+        <span class="status-badge" id="greenhouse-status">Онлайн</span>
       </h1>
+      
+      <!-- Информация о местоположении -->
+      <div class="location-info" id="location-info">
+        <i class="fas fa-map-marker-alt"></i>
+        <span id="greenhouse-location">Москва, дачный участок №5</span>
+      </div>
 
       <!-- Текущие показатели -->
       <section class="section">
@@ -147,27 +243,301 @@
     </div>
   </main>
 
+  <!-- Модальное окно редактирования теплицы -->
+  <div class="modal" id="edit-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Редактирование теплицы</h3>
+      <form id="edit-greenhouse-form">
+        <div class="form-group">
+          <label for="edit-name">Название теплицы</label>
+          <input type="text" id="edit-name" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-location">Местоположение</label>
+          <input type="text" id="edit-location" placeholder="Например: Москва, дачный участок №5">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-edit-btn">Отмена</button>
+          <button type="submit" class="btn" id="save-edit-btn">
+            <i class="fas fa-save"></i> Сохранить
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модальное окно подтверждения удаления -->
+  <div class="modal" id="delete-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Удаление теплицы</h3>
+      <p>Вы уверены, что хотите удалить теплицу "<span id="delete-greenhouse-name"></span>"?</p>
+      <p class="location-info" id="delete-location-info"></p>
+      <p><strong>Внимание:</strong> Это действие нельзя отменить. Все устройства и данные этой теплицы будут удалены.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-delete-btn">Отмена</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete-btn">
+          <i class="fas fa-trash"></i> Удалить
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // Переключение режимов
-    document.getElementById('manual-mode').addEventListener('click', () => {
-      document.getElementById('manual-mode').classList.add('active');
-      document.getElementById('auto-mode').classList.remove('active');
-      document.getElementById('auto-settings').style.display = 'none';
+    // Глобальные переменные
+    let currentGreenhouseId = null;
+    let currentGreenhouseData = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Загружаем данные теплицы из URL параметров
+      loadGreenhouseData();
+      loadUserProfile();
+      
+      // Инициализация модальных окон
+      initModals();
+      
+      // Инициализация обработчиков кнопок
+      initEventHandlers();
     });
 
-    document.getElementById('auto-mode').addEventListener('click', () => {
-      document.getElementById('auto-mode').classList.add('active');
-      document.getElementById('manual-mode').classList.remove('active');
-      document.getElementById('auto-settings').style.display = 'grid';
-    });
+    // Загрузка данных теплицы из API
+    async function loadGreenhouseData() {
+      const urlParams = new URLSearchParams(window.location.search);
+      currentGreenhouseId = urlParams.get('greenhouse_id');
+      
+      if (!currentGreenhouseId) {
+        console.error('ID теплицы не указан в URL');
+        return;
+      }
+      
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.error('Требуется авторизация');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          currentGreenhouseData = await response.json();
+          updateUIWithGreenhouseData(currentGreenhouseData);
+        } else {
+          console.error('Ошибка загрузки данных теплицы:', response.status);
+          alert('Не удалось загрузить данные теплицы');
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки данных теплицы:', error);
+        alert('Ошибка подключения к серверу');
+      }
+    }
 
-    // Простая обработка кнопок
-    document.querySelectorAll('.control-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const action = btn.textContent.trim();
-        alert(`Команда отправлена: ${action}`);
+    // Загрузка профиля пользователя
+    async function loadUserProfile() {
+      const userProfile = JSON.parse(localStorage.getItem('user_profile'));
+      const userNameElement = document.getElementById('user-name');
+      const userAvatarElement = document.getElementById('user-avatar');
+      
+      if (userProfile && userProfile.name) {
+        if (userNameElement) userNameElement.textContent = userProfile.name;
+        if (userAvatarElement) userAvatarElement.textContent = userProfile.name.charAt(0).toUpperCase();
+      }
+    }
+
+    // Обновление UI с данными теплицы
+    function updateUIWithGreenhouseData(data) {
+      // Обновляем название на всех элементах
+      document.getElementById('page-title').textContent = `${data.name} — Умная теплица`;
+      document.getElementById('sidebar-greenhouse-name').textContent = data.name;
+      document.getElementById('breadcrumb-greenhouse-name').textContent = data.name;
+      document.getElementById('greenhouse-name').textContent = data.name;
+      document.getElementById('delete-greenhouse-name').textContent = data.name;
+      
+      // Обновляем местоположение
+      const locationElement = document.getElementById('greenhouse-location');
+      const deleteLocationElement = document.getElementById('delete-location-info');
+      
+      if (data.location) {
+        locationElement.textContent = data.location;
+        deleteLocationElement.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(data.location)}`;
+        document.getElementById('location-info').style.display = 'flex';
+      } else {
+        locationElement.textContent = 'Местоположение не указано';
+        deleteLocationElement.textContent = 'Местоположение не указано';
+        document.getElementById('location-info').style.display = 'flex';
+      }
+      
+      // Обновляем статус
+      const statusElement = document.getElementById('greenhouse-status');
+      if (data.is_active) {
+        statusElement.textContent = 'Онлайн';
+        statusElement.className = 'status-badge';
+      } else {
+        statusElement.textContent = 'Оффлайн';
+        statusElement.className = 'status-badge offline';
+      }
+      
+      // Заполняем форму редактирования
+      document.getElementById('edit-name').value = data.name;
+      document.getElementById('edit-location').value = data.location || '';
+    }
+
+    // Инициализация модальных окон
+    function initModals() {
+      const editModal = document.getElementById('edit-modal');
+      const deleteModal = document.getElementById('delete-modal');
+      
+      // Кнопка редактирования
+      document.getElementById('edit-greenhouse-btn').addEventListener('click', () => {
+        editModal.style.display = 'flex';
       });
-    });
+      
+      // Кнопка удаления
+      document.getElementById('delete-greenhouse-btn').addEventListener('click', () => {
+        deleteModal.style.display = 'flex';
+      });
+      
+      // Закрытие модальных окон
+      document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+        editModal.style.display = 'none';
+      });
+      
+      document.getElementById('cancel-delete-btn').addEventListener('click', () => {
+        deleteModal.style.display = 'none';
+      });
+      
+      // Закрытие по клику вне модального окна
+      window.addEventListener('click', (event) => {
+        if (event.target === editModal) {
+          editModal.style.display = 'none';
+        }
+        if (event.target === deleteModal) {
+          deleteModal.style.display = 'none';
+        }
+      });
+    }
+
+    // Инициализация обработчиков событий
+    function initEventHandlers() {
+      // Обработка формы редактирования
+      document.getElementById('edit-greenhouse-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await updateGreenhouse();
+      });
+      
+      // Обработка подтверждения удаления
+      document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+        await deleteGreenhouse();
+      });
+      
+      // Переключение режимов
+      document.getElementById('manual-mode').addEventListener('click', () => {
+        document.getElementById('manual-mode').classList.add('active');
+        document.getElementById('auto-mode').classList.remove('active');
+        document.getElementById('auto-settings').style.display = 'none';
+      });
+
+      document.getElementById('auto-mode').addEventListener('click', () => {
+        document.getElementById('auto-mode').classList.add('active');
+        document.getElementById('manual-mode').classList.remove('active');
+        document.getElementById('auto-settings').style.display = 'grid';
+      });
+
+      // Обработка кнопок управления
+      document.querySelectorAll('.control-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.textContent.trim();
+          alert(`Команда отправлена: ${action}`);
+        });
+      });
+    }
+
+    // Обновление данных теплицы
+    async function updateGreenhouse() {
+      const name = document.getElementById('edit-name').value.trim();
+      const location = document.getElementById('edit-location').value.trim();
+      
+      if (!name) {
+        alert('Название теплицы обязательно для заполнения');
+        return;
+      }
+      
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        alert('Требуется авторизация');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: name,
+            location: location || null
+          })
+        });
+        
+        if (response.ok) {
+          const updatedData = await response.json();
+          currentGreenhouseData = updatedData;
+          updateUIWithGreenhouseData(updatedData);
+          document.getElementById('edit-modal').style.display = 'none';
+          alert('Теплица успешно обновлена');
+        } else {
+          const errorData = await response.json();
+          console.error('Ошибка обновления теплицы:', errorData);
+          alert('Не удалось обновить теплицу');
+        }
+      } catch (error) {
+        console.error('Ошибка обновления теплицы:', error);
+        alert('Ошибка подключения к серверу');
+      }
+    }
+
+    // Удаление теплицы
+    async function deleteGreenhouse() {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        alert('Требуется авторизация');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          alert('Теплица успешно удалена');
+          // Перенаправляем на dashboard
+          window.location.href = '/dashboard';
+        } else {
+          const errorData = await response.json();
+          console.error('Ошибка удаления теплицы:', errorData);
+          alert('Не удалось удалить теплицу');
+        }
+      } catch (error) {
+        console.error('Ошибка удаления теплицы:', error);
+        alert('Ошибка подключения к серверу');
+      }
+    }
+
+    // Экранирование HTML для безопасности
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
   </script>
 </body>
 </html>

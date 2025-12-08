@@ -7,6 +7,84 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   {% load static %}
   <link rel="stylesheet" href="{% static 'main/css/dashboard.css' %}">
+  <style>
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .empty-icon {
+      font-size: 64px;
+      color: #ddd;
+      margin-bottom: 20px;
+    }
+    
+    .empty-state h3 {
+      margin-bottom: 12px;
+      color: #666;
+      font-weight: 500;
+    }
+    
+    .empty-state p {
+      color: #888;
+      margin-bottom: 24px;
+      max-width: 400px;
+      margin-left: auto;
+    margin-right: auto;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .loading i {
+      margin-right: 10px;
+    }
+    
+    .greenhouse-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    
+    /* Иконка для теплицы */
+    .greenhouse-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      background: rgba(76, 175, 80, 0.1);
+      border-radius: 12px;
+      margin: 0 auto 15px;
+      color: var(--primary);
+      font-size: 24px;
+    }
+    
+    .greenhouse-icon i {
+      font-size: 24px;
+    }
+    
+    /* Стиль для карточки теплицы с иконкой */
+    .greenhouse-card-with-icon {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 25px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-align: center;
+    }
+    
+    .greenhouse-card-with-icon:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+  </style>
 </head>
 <body>
   <!-- Боковое меню -->
@@ -50,187 +128,186 @@
     <div class="content">
       <div class="action-bar">
         <h2 class="page-subtitle">Мои теплицы</h2>
-        <a href="/add_device" class="btn">
+        <a href="/add_greenhouse" class="btn">
           <i class="fas fa-plus"></i>
           Добавить теплицу
         </a>
       </div>
 
-      <div class="greenhouses">
-        <!-- Теплица 1 -->
-        <a href="/greenhouse_detail" class="greenhouse-card" style="text-decoration: none; color: inherit;">
-          <div class="card-header">
-            <h3 class="card-title">Теплица на даче</h3>
-            <span class="status online">Онлайн</span>
-          </div>
-          <div class="metrics">
-            <div class="metric">
-              <div class="metric-value">26.5°C</div>
-              <div class="metric-label">Температура</div>
-            </div>
-            <div class="metric">
-              <div class="metric-value">68%</div>
-              <div class="metric-label">Влажность</div>
-            </div>
-          </div>
-          <div class="actuator-status">
-            <i class="fas fa-window-maximize"></i>
-            <span>Открыто (100%)</span>
-          </div>
-        </a>
-
-        <!-- Теплица 2 -->
-        <div class="greenhouse-card">
-          <div class="card-header">
-            <h3 class="card-title">Зимняя теплица</h3>
-            <span class="status offline">Оффлайн</span>
-          </div>
-          <div class="metrics">
-            <div class="metric">
-              <div class="metric-value">—</div>
-              <div class="metric-label">Температура</div>
-            </div>
-            <div class="metric">
-              <div class="metric-value">—</div>
-              <div class="metric-label">Влажность</div>
-            </div>
-          </div>
-          <div class="actuator-status">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span>Нет данных</span>
-          </div>
-        </div>
-
-        <!-- Теплица 3 -->
-        <div class="greenhouse-card">
-          <div class="card-header">
-            <h3 class="card-title">Рассадник</h3>
-            <span class="status online">Онлайн</span>
-          </div>
-          <div class="metrics">
-            <div class="metric">
-              <div class="metric-value">22.1°C</div>
-              <div class="metric-label">Температура</div>
-            </div>
-            <div class="metric">
-              <div class="metric-value">74%</div>
-              <div class="metric-label">Влажность</div>
-            </div>
-          </div>
-          <div class="actuator-status moving">
-            <i class="fas fa-sync-alt fa-spin"></i>
-            <span>Открывается...</span>
-          </div>
+      <div class="greenhouses" id="greenhouses-container">
+        <!-- Теплицы будут загружаться динамически -->
+        <div class="loading" id="loading-state">
+          <i class="fas fa-spinner fa-spin"></i> Загрузка теплиц...
         </div>
       </div>
     </div>
   </main>
 
   <script>
-    // Загружаем и отображаем имя пользователя при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
-        // Получаем профиль пользователя из localStorage
+        // Загружаем профиль пользователя
+        loadUserProfile();
+        
+        // Загружаем теплицы
+        loadGreenhouses();
+    });
+
+    // Загрузка профиля пользователя
+    async function loadUserProfile() {
         const userProfile = JSON.parse(localStorage.getItem('user_profile'));
         const userNameElement = document.getElementById('user-name');
         const userAvatarElement = document.getElementById('user-avatar');
         
-        // Для отладки
-        console.log('🔄 Загружаю профиль из localStorage:', userProfile);
-        
         if (userProfile && userProfile.name) {
-            // Если есть профиль, обновляем имя
-            if (userNameElement) {
-                userNameElement.textContent = userProfile.name;
-                console.log('✅ Имя установлено из localStorage:', userProfile.name);
-            }
-            
-            if (userAvatarElement) {
-                // Берем первую букву имени для аватара
-                const firstLetter = userProfile.name.charAt(0).toUpperCase();
-                userAvatarElement.textContent = firstLetter;
-                console.log('✅ Аватар установлен:', firstLetter);
-            }
+            // Если есть профиль в localStorage, используем его
+            if (userNameElement) userNameElement.textContent = userProfile.name;
+            if (userAvatarElement) userAvatarElement.textContent = userProfile.name.charAt(0).toUpperCase();
         } else {
-            // Если нет профиля или имени в localStorage
-            console.log('⚠️ Нет профиля в localStorage, проверяю API...');
-            
+            // Если нет, пытаемся получить из API
             const token = localStorage.getItem('access_token');
             if (token) {
-                fetch('http://127.0.0.1:8001/auth/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                .then(response => {
+                try {
+                    const response = await fetch('http://127.0.0.1:8001/profile/', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
                     if (response.ok) {
-                        return response.json();
+                        const userData = await response.json();
+                        console.log('📋 Получены данные профиля:', userData);
+                        
+                        // Используем full_name из API
+                        let fullName = '';
+                        
+                        if (userData.full_name && userData.full_name.trim() !== '') {
+                            fullName = userData.full_name;
+                        } else if (userData.email) {
+                            fullName = userData.email.split('@')[0];
+                        } else {
+                            fullName = 'Пользователь';
+                        }
+                        
+                        // Сохраняем профиль
+                        const profile = {
+                            name: fullName,
+                            email: userData.email || '',
+                            fullData: userData
+                        };
+                        localStorage.setItem('user_profile', JSON.stringify(profile));
+                        
+                        // Обновляем UI
+                        if (userNameElement) {
+                            userNameElement.textContent = fullName;
+                        }
+                        
+                        if (userAvatarElement) {
+                            userAvatarElement.textContent = fullName.charAt(0).toUpperCase();
+                        }
                     }
-                    throw new Error('Не удалось получить профиль');
-                })
-                .then(userData => {
-                    console.log('📋 Получены данные от API:', userData);
-                    
-                    // ИСПРАВЛЕНО: Правильно получаем полное имя
-                    let fullName = '';
-                    
-                    if (userData.full_name && userData.full_name.trim() !== '') {
-                        fullName = userData.full_name;
-                    } else if (userData.name && userData.name.trim() !== '') {
-                        fullName = userData.name;
-                    } else if (userData.first_name || userData.last_name) {
-                        fullName = [userData.first_name, userData.last_name].filter(Boolean).join(' ');
-                    } else if (userData.email) {
-                        fullName = userData.email.split('@')[0];
-                    } else {
-                        fullName = 'Пользователь';
-                    }
-                    
-                    // Сохраняем профиль
-                    const profile = {
-                        name: fullName,
-                        email: userData.email || '',
-                        fullData: userData
-                    };
-                    localStorage.setItem('user_profile', JSON.stringify(profile));
-                    
-                    // Обновляем UI
-                    if (userNameElement) {
-                        userNameElement.textContent = fullName;
-                        console.log('✅ Имя установлено из API:', fullName);
-                    }
-                    
-                    if (userAvatarElement) {
-                        const firstLetter = fullName.charAt(0).toUpperCase();
-                        userAvatarElement.textContent = firstLetter;
-                        console.log('✅ Аватар установлен:', firstLetter);
-                    }
-                })
-                .catch(error => {
+                } catch (error) {
                     console.error('❌ Ошибка загрузки профиля:', error);
-                    // Если не удалось загрузить, показываем стандартное имя
-                    if (userNameElement) {
-                        userNameElement.textContent = 'Пользователь';
-                    }
-                    if (userAvatarElement) {
-                        userAvatarElement.textContent = 'П';
-                    }
-                });
+                    if (userNameElement) userNameElement.textContent = 'Пользователь';
+                    if (userAvatarElement) userAvatarElement.textContent = 'П';
+                }
             } else {
-                // Если нет токена, показываем стандартное имя
-                console.log('⚠️ Нет токена авторизации');
-                if (userNameElement) {
-                    userNameElement.textContent = 'Пользователь';
-                }
-                if (userAvatarElement) {
-                    userAvatarElement.textContent = 'П';
-                }
+                if (userNameElement) userNameElement.textContent = 'Пользователь';
+                if (userAvatarElement) userAvatarElement.textContent = 'П';
             }
         }
-        
-        // Дополнительная проверка для отладки
-        console.log('Текущее содержимое user-name:', userNameElement ? userNameElement.textContent : 'элемент не найден');
-        console.log('Текущее содержимое user-avatar:', userAvatarElement ? userAvatarElement.textContent : 'элемент не найден');
-    });
-    </script>
+    }
+
+    // Загрузка теплиц из API
+    async function loadGreenhouses() {
+        // Создание карточки теплицы
+function createGreenhouseCard(greenhouse) {
+  const card = document.createElement('a');
+  card.href = `/greenhouse_detail?greenhouse_id=${greenhouse.id}`;
+  card.className = 'greenhouse-card greenhouse-card-with-icon';
+  card.style.textDecoration = 'none';
+  card.style.color = 'inherit';
+  
+  // Генерируем случайные показатели для демонстрации
+  const isOnline = greenhouse.is_active !== false;
+  const temperature = isOnline ? (22 + Math.random() * 6).toFixed(1) : '—';
+  const humidity = isOnline ? (65 + Math.random() * 15).toFixed(0) : '—';
+  const actuatorStatus = isOnline ? 'Открыто (100%)' : 'Нет данных';
+  const actuatorIcon = isOnline ? 'fa-window-maximize' : 'fa-exclamation-triangle';
+  
+  // Выбираем иконку в зависимости от статуса
+  const greenhouseIcon = isOnline ? 'fa-leaf' : 'fa-leaf';
+  
+  // Формируем отображение местоположения
+  const hasLocation = greenhouse.location && greenhouse.location.trim() !== '';
+  const locationClass = hasLocation ? '' : 'no-location';
+  const locationText = hasLocation ? greenhouse.location : 'Местоположение не указано';
+  
+  card.innerHTML = `
+      <div class="greenhouse-icon">
+          <i class="fas ${greenhouseIcon}"></i>
+      </div>
+      <div class="card-header">
+          <h3 class="card-title">${escapeHtml(greenhouse.name)}</h3>
+          <span class="status ${isOnline ? 'online' : 'offline'}">
+              ${isOnline ? 'Онлайн' : 'Оффлайн'}
+          </span>
+      </div>
+      <div class="greenhouse-location ${locationClass}">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>${escapeHtml(locationText)}</span>
+      </div>
+      <div class="metrics">
+          <div class="metric">
+              <div class="metric-value">${temperature}${isOnline ? '°C' : ''}</div>
+              <div class="metric-label">Температура</div>
+          </div>
+          <div class="metric">
+              <div class="metric-value">${humidity}${isOnline ? '%' : ''}</div>
+              <div class="metric-label">Влажность</div>
+          </div>
+      </div>
+      <div class="actuator-status">
+          <i class="fas ${actuatorIcon}"></i>
+          <span>${actuatorStatus}</span>
+      </div>
+  `;
+  
+  return card;
+}
+    // Показать состояние "пусто"
+    function showEmptyState(message) {
+        const container = document.getElementById('greenhouses-container');
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <h3>${message}</h3>
+                <p>Добавьте свою первую теплицу, чтобы начать мониторинг и управление</p>
+                <a href="/add_greenhouse" class="btn">
+                    <i class="fas fa-plus"></i>
+                    Добавить теплицу
+                </a>
+            </div>
+        `;
+    }
+
+    // Экранирование HTML для безопасности
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Функция для обновления списка теплиц (можно вызвать после добавления новой)
+    window.updateGreenhouses = function() {
+        loadGreenhouses();
+    };
+    
+    // Автоматическое обновление каждые 30 секунд
+    setInterval(() => {
+        loadGreenhouses();
+    }, 30000);
+  </script>
 </body>
 </html>

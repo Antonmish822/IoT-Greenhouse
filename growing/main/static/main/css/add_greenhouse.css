@@ -1,0 +1,540 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  :root {
+    --primary: #4caf50;
+    --primary-dark: #388e3c;
+    --primary-light: #e8f5e9;
+    --secondary: #607d8b;
+    --danger: #f44336;
+    --warning: #ff9800;
+    --success: #4caf50;
+    --gray: #f5f5f5;
+    --gray-dark: #757575;
+    --dark: #333;
+    --light: #fff;
+    --border: #e0e0e0;
+    --border-light: #eeeeee;
+  }
+  
+  body {
+    background-color: #f9f9f9;
+    color: var(--dark);
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  /* Боковое меню */
+  .sidebar {
+    width: 240px;
+    background: var(--light);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    z-index: 100;
+  }
+  
+  .logo {
+    padding: 0 20px 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .nav-item {
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+  }
+  
+  .nav-item:hover {
+    background: rgba(76, 175, 80, 0.05);
+    color: var(--primary);
+  }
+  
+  .nav-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-left: 3px solid var(--primary);
+  }
+  
+  /* Основной контент */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-left: 240px;
+    min-height: 100vh;
+  }
+  
+  .header {
+    padding: 20px 30px;
+    background: var(--light);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .page-title i {
+    color: var(--primary);
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+  }
+  
+  .content {
+    padding: 30px;
+    flex: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  /* Хлебные крошки */
+  .breadcrumb {
+    margin-bottom: 30px;
+  }
+  
+  .breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  
+  .breadcrumb a:hover {
+    background: var(--primary-light);
+  }
+  
+  .breadcrumb i {
+    font-size: 14px;
+  }
+  
+  /* Основная форма */
+  .form-section {
+    background: var(--light);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+  
+  .form-header {
+    padding: 24px 30px;
+    background: var(--primary-light);
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .form-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 8px;
+  }
+  
+  .form-header p {
+    color: var(--gray-dark);
+    line-height: 1.5;
+  }
+  
+  #add-greenhouse-form {
+    padding: 30px;
+  }
+  
+  /* Поля формы */
+  .form-group {
+    margin-bottom: 24px;
+  }
+  
+  .form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--dark);
+    font-size: 15px;
+  }
+  
+  .form-group label i {
+    color: var(--primary);
+    width: 20px;
+    text-align: center;
+  }
+  
+  .required {
+    color: var(--danger);
+    font-weight: bold;
+  }
+  
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.2s;
+    background: var(--light);
+  }
+  
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  }
+  
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: #aaa;
+  }
+  
+  .form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+  }
+  
+  .hint {
+    font-size: 13px;
+    color: var(--gray-dark);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+  
+  /* Кнопки */
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-light);
+  }
+  
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 140px;
+  }
+  
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  }
+  
+  .btn-secondary {
+    background: white;
+    color: var(--gray-dark);
+    border: 1px solid var(--border);
+  }
+  
+  .btn-secondary:hover {
+    background: #f9f9f9;
+    border-color: #ddd;
+  }
+  
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  /* Справка */
+  .help-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+  }
+  
+  .help-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: var(--dark);
+  }
+  
+  .help-section h3 i {
+    color: var(--primary);
+  }
+  
+  .tip {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--primary-light);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+  }
+  
+  .tip i {
+    color: var(--warning);
+    font-size: 20px;
+    margin-top: 2px;
+  }
+  
+  .tip strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--dark);
+  }
+  
+  .tip p {
+    color: var(--gray-dark);
+    line-height: 1.5;
+    font-size: 14px;
+  }
+  
+  /* Модальное окно */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  
+  .modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: modalAppear 0.3s ease;
+  }
+  
+  @keyframes modalAppear {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .modal-header {
+    padding: 24px 30px;
+    background: var(--primary-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .modal-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .success-icon {
+    color: var(--success);
+    font-size: 24px;
+  }
+  
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: var(--gray-dark);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+  
+  .modal-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--dark);
+  }
+  
+  .modal-body {
+    padding: 30px;
+  }
+  
+  .modal-body p {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    color: var(--dark);
+  }
+  
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  
+  .modal-actions .btn {
+    min-width: auto;
+    flex: 1;
+  }
+  
+  /* Адаптация для мобильных */
+  @media (max-width: 768px) {
+    body {
+      flex-direction: column;
+    }
+    
+    .sidebar {
+      position: static;
+      width: 100%;
+      height: auto;
+      flex-direction: row;
+      padding: 0;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .logo {
+      padding: 15px 20px;
+    }
+    
+    .nav-item {
+      padding: 15px 20px;
+      flex-direction: column;
+      font-size: 12px;
+      gap: 6px;
+    }
+    
+    .nav-item i {
+      font-size: 16px;
+    }
+    
+    .main {
+      margin-left: 0;
+    }
+    
+    .header {
+      padding: 15px 20px;
+      flex-direction: column;
+      gap: 15px;
+      align-items: flex-start;
+    }
+    
+    .user-info {
+      align-self: flex-end;
+    }
+    
+    .content {
+      padding: 20px;
+    }
+    
+    .form-header,
+    #add-greenhouse-form {
+      padding: 20px;
+    }
+    
+    .form-actions {
+      flex-direction: column-reverse;
+    }
+    
+    .form-actions .btn {
+      width: 100%;
+    }
+    
+    .modal-actions {
+      flex-direction: column;
+    }
+    
+    .modal-actions .btn {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .tip {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .tip i {
+      margin-bottom: 8px;
+    }
+  }
