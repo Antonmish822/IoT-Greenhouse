@@ -10,6 +10,11 @@ from ..services.auth import authenticate_user, register_user
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+@router.options("/register")
+def register_options():
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def register(payload: UserCreate, session: Session = Depends(get_session)) -> UserRead:
     try:
