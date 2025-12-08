@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Умная теплица — Панель управления</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'main/css/dashboard.css' %}">
+</head>
+<body>
+  <!-- Боковое меню -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="fas fa-leaf"></i>
+      <span>Умная теплица</span>
+    </div>
+    <a href="/dashboard" class="nav-item active">
+      <i class="fas fa-home"></i>
+      <span>Панель управления</span>
+    </a>
+    <a href="/notifications" class="nav-item">
+      <i class="fas fa-bell"></i>
+      <span>Уведомления</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-chart-line"></i>
+      <span>Аналитика</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-cog"></i>
+      <span>Настройки</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-question-circle"></i>
+      <span>Поддержка</span>
+    </a>
+  </aside>
+
+  <!-- Основной контент -->
+  <main class="main">
+    <header class="header">
+      <h1 class="page-title">Панель управления</h1>
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">З</div>
+        <span id="user-name">Загрузка...</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="action-bar">
+        <h2 class="page-subtitle">Мои теплицы</h2>
+        <a href="/add_device" class="btn">
+          <i class="fas fa-plus"></i>
+          Добавить теплицу
+        </a>
+      </div>
+
+      <div class="greenhouses">
+        <!-- Теплица 1 -->
+        <a href="/greenhouse_detail" class="greenhouse-card" style="text-decoration: none; color: inherit;">
+          <div class="card-header">
+            <h3 class="card-title">Теплица на даче</h3>
+            <span class="status online">Онлайн</span>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-value">26.5°C</div>
+              <div class="metric-label">Температура</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">68%</div>
+              <div class="metric-label">Влажность</div>
+            </div>
+          </div>
+          <div class="actuator-status">
+            <i class="fas fa-window-maximize"></i>
+            <span>Открыто (100%)</span>
+          </div>
+        </a>
+
+        <!-- Теплица 2 -->
+        <div class="greenhouse-card">
+          <div class="card-header">
+            <h3 class="card-title">Зимняя теплица</h3>
+            <span class="status offline">Оффлайн</span>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-value">—</div>
+              <div class="metric-label">Температура</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">—</div>
+              <div class="metric-label">Влажность</div>
+            </div>
+          </div>
+          <div class="actuator-status">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Нет данных</span>
+          </div>
+        </div>
+
+        <!-- Теплица 3 -->
+        <div class="greenhouse-card">
+          <div class="card-header">
+            <h3 class="card-title">Рассадник</h3>
+            <span class="status online">Онлайн</span>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-value">22.1°C</div>
+              <div class="metric-label">Температура</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">74%</div>
+              <div class="metric-label">Влажность</div>
+            </div>
+          </div>
+          <div class="actuator-status moving">
+            <i class="fas fa-sync-alt fa-spin"></i>
+            <span>Открывается...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Загружаем и отображаем имя пользователя при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        // Получаем профиль пользователя из localStorage
+        const userProfile = JSON.parse(localStorage.getItem('user_profile'));
+        const userNameElement = document.getElementById('user-name');
+        const userAvatarElement = document.getElementById('user-avatar');
+        
+        // Для отладки
+        console.log('🔄 Загружаю профиль из localStorage:', userProfile);
+        
+        if (userProfile && userProfile.name) {
+            // Если есть профиль, обновляем имя
+            if (userNameElement) {
+                userNameElement.textContent = userProfile.name;
+                console.log('✅ Имя установлено из localStorage:', userProfile.name);
+            }
+            
+            if (userAvatarElement) {
+                // Берем первую букву имени для аватара
+                const firstLetter = userProfile.name.charAt(0).toUpperCase();
+                userAvatarElement.textContent = firstLetter;
+                console.log('✅ Аватар установлен:', firstLetter);
+            }
+        } else {
+            // Если нет профиля или имени в localStorage
+            console.log('⚠️ Нет профиля в localStorage, проверяю API...');
+            
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                fetch('http://127.0.0.1:8001/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Не удалось получить профиль');
+                })
+                .then(userData => {
+                    console.log('📋 Получены данные от API:', userData);
+                    
+                    // ИСПРАВЛЕНО: Правильно получаем полное имя
+                    let fullName = '';
+                    
+                    if (userData.full_name && userData.full_name.trim() !== '') {
+                        fullName = userData.full_name;
+                    } else if (userData.name && userData.name.trim() !== '') {
+                        fullName = userData.name;
+                    } else if (userData.first_name || userData.last_name) {
+                        fullName = [userData.first_name, userData.last_name].filter(Boolean).join(' ');
+                    } else if (userData.email) {
+                        fullName = userData.email.split('@')[0];
+                    } else {
+                        fullName = 'Пользователь';
+                    }
+                    
+                    // Сохраняем профиль
+                    const profile = {
+                        name: fullName,
+                        email: userData.email || '',
+                        fullData: userData
+                    };
+                    localStorage.setItem('user_profile', JSON.stringify(profile));
+                    
+                    // Обновляем UI
+                    if (userNameElement) {
+                        userNameElement.textContent = fullName;
+                        console.log('✅ Имя установлено из API:', fullName);
+                    }
+                    
+                    if (userAvatarElement) {
+                        const firstLetter = fullName.charAt(0).toUpperCase();
+                        userAvatarElement.textContent = firstLetter;
+                        console.log('✅ Аватар установлен:', firstLetter);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Ошибка загрузки профиля:', error);
+                    // Если не удалось загрузить, показываем стандартное имя
+                    if (userNameElement) {
+                        userNameElement.textContent = 'Пользователь';
+                    }
+                    if (userAvatarElement) {
+                        userAvatarElement.textContent = 'П';
+                    }
+                });
+            } else {
+                // Если нет токена, показываем стандартное имя
+                console.log('⚠️ Нет токена авторизации');
+                if (userNameElement) {
+                    userNameElement.textContent = 'Пользователь';
+                }
+                if (userAvatarElement) {
+                    userAvatarElement.textContent = 'П';
+                }
+            }
+        }
+        
+        // Дополнительная проверка для отладки
+        console.log('Текущее содержимое user-name:', userNameElement ? userNameElement.textContent : 'элемент не найден');
+        console.log('Текущее содержимое user-avatar:', userAvatarElement ? userAvatarElement.textContent : 'элемент не найден');
+    });
+    </script>
+</body>
+</html>

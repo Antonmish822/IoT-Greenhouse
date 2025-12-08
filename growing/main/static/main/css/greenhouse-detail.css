@@ -65,6 +65,7 @@ body {
   flex-direction: column;
 }
 
+/* Шапка с кнопкой */
 .header {
   padding: 20px 30px;
   background: var(--light);
@@ -76,6 +77,8 @@ body {
 
 .breadcrumb {
   color: #666;
+  display: flex;
+  align-items: center;
 }
 
 .breadcrumb a {
@@ -85,6 +88,32 @@ body {
 
 .breadcrumb span {
   margin: 0 8px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.btn {
+  padding: 10px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.btn:hover {
+  background: var(--primary-dark);
 }
 
 .user-info {
@@ -342,7 +371,19 @@ body {
   }
 
   .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
     padding: 15px 20px;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .breadcrumb {
+    font-size: 14px;
   }
 
   .content {
@@ -351,6 +392,37 @@ body {
 
   .charts,
   .auto-settings {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-toggle {
+    flex-direction: column;
+  }
+  
+  .page-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .user-info {
+    align-self: flex-end;
+  }
+  
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .controls {
     grid-template-columns: 1fr;
   }
 }
