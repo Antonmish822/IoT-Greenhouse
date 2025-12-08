@@ -24,8 +24,8 @@ def add_device(request):
 def greenhouse_detail(request):
     return render(request, 'main/greenhouse_detail.html')
 
-def add_greenhouse(request):
-    return render(request, 'main/add_greenhouse.html')
+def profile(request):
+    return render(request, 'main/profile.html')
 
 def logout_view(request):
     logout(request)
