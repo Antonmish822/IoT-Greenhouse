@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 
@@ -17,6 +17,11 @@ def register(payload: UserCreate, session: Session = Depends(get_session)) -> Us
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return user
+
+
+@router.options("/login")
+def login_options():
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/login")
