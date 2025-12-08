@@ -23,6 +23,16 @@ def list_for_user(session: Session, user_id: int) -> Iterable[Device]:
     return session.exec(statement).all()
 
 
+def list_for_user_and_greenhouse(
+    session: Session, user_id: int, greenhouse_id: int
+) -> Iterable[Device]:
+    statement = select(Device).where(
+        Device.user_id == user_id,
+        Device.greenhouse_id == greenhouse_id,
+    )
+    return session.exec(statement).all()
+
+
 def save(session: Session, device: Device) -> Device:
     session.add(device)
     session.commit()

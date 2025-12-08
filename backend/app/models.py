@@ -18,6 +18,21 @@ class User(SQLModel, table=True):
     is_active: bool = Field(default=True)
 
 
+class Greenhouse(SQLModel, table=True):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    location: Optional[str] = Field(default=None)
+    is_active: bool = Field(default=True)
+    greenhouse_metadata: Optional[Dict[str, Any]] = Field(
+        default=None, sa_column=Column("greenhouse_metadata", JSON)
+    )
+    user_id: int = Field(foreign_key="user.id")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class Device(SQLModel, table=True):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -29,4 +44,5 @@ class Device(SQLModel, table=True):
     device_metadata: Optional[Dict[str, Any]] = Field(
         default=None, sa_column=Column("metadata", JSON)
     )
+    greenhouse_id: Optional[int] = Field(default=None, foreign_key="greenhouse.id")
     user_id: int = Field(foreign_key="user.id")

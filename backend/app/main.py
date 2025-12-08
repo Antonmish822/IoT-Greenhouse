@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import Settings
 from .controllers.auth import router as auth_router
 from .controllers.devices import router as devices_router
+from .controllers.greenhouses import router as greenhouses_router
 from .controllers.profile import router as profile_router
 from .controllers.telemetry import router as telemetry_router
 from .database import init_db
@@ -20,6 +21,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(devices_router)
+app.include_router(greenhouses_router)
 app.include_router(profile_router)
 app.include_router(telemetry_router)
 
