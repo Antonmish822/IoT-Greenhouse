@@ -386,9 +386,6 @@
           
           // Загружаем устройства
           await loadDevices();
-          
-          // Для устройств телеметрии загружаем данные
-          await loadTelemetryData();
         }
       } catch (error) {
         console.error('Ошибка загрузки данных:', error);
@@ -406,29 +403,34 @@
         
         if (response.ok) {
           const allDevices = await response.json();
+          console.log('Все устройства:', allDevices); // Для отладки
+          
           // Фильтруем устройства только для текущей теплицы
           devices = allDevices.filter(device => device.greenhouse_id == currentGreenhouseId);
+          console.log('Устройства текущей теплицы:', devices); // Для отладки
+          
           updateDevicesUI();
+          
+          // Загружаем телеметрию для устройств
+          await loadTelemetryData();
           
           // Проверяем наличие устройств разных типов
           checkDeviceTypes();
+        } else {
+          console.error('Ошибка загрузки устройств:', response.status);
         }
       } catch (error) {
         console.error('Ошибка загрузки устройств:', error);
       }
     }
 
-    // Загрузка телеметрии для устройств типа telemetry
+    // Загрузка телеметрии для устройств
     async function loadTelemetryData() {
       const token = localStorage.getItem('access_token');
       telemetryData = {};
       
-      // Находим устройства телеметрии
-      const telemetryDevices = devices.filter(device => 
-        device.metadata && device.metadata.device_type === 'telemetry'
-      );
-      
-      for (const device of telemetryDevices) {
+      // Загружаем телеметрию для всех устройств теплицы
+      for (const device of devices) {
         try {
           const response = await fetch(`http://127.0.0.1:8001/telemetry/${device.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -437,6 +439,9 @@
           if (response.ok) {
             const telemetry = await response.json();
             telemetryData[device.id] = telemetry;
+            console.log(`Телеметрия для устройства ${device.id}:`, telemetry); // Для отладки
+          } else {
+            console.log(`Нет телеметрии для устройства ${device.id}`);
           }
         } catch (error) {
           console.error(`Ошибка загрузки телеметрии для устройства ${device.id}:`, error);
@@ -444,17 +449,39 @@
       }
       
       updateTelemetryUI();
+      updateActuatorUI();
       updateChartsUI();
     }
 
     // Проверка типов устройств
     function checkDeviceTypes() {
-      const telemetryDevices = devices.filter(device => 
-        device.metadata && device.metadata.device_type === 'telemetry'
-      );
-      const actuatorDevices = devices.filter(device => 
-        device.metadata && device.metadata.device_type === 'actuator'
-      );
+      console.log('Проверка типов устройств...'); // Для отладки
+      
+      // Проверяем метаданные каждого устройства
+      devices.forEach(device => {
+        console.log(`Устройство ${device.id}:`, {
+          name: device.name,
+          metadata: device.metadata,
+          device_type: device.metadata?.device_type
+        });
+      });
+      
+      // Определяем устройства телеметрии (тип "telemetry")
+      const telemetryDevices = devices.filter(device => {
+        const deviceType = device.metadata?.device_type;
+        console.log(`Проверка устройства ${device.id}: device_type = "${deviceType}"`);
+        return deviceType === 'telemetry';
+      });
+      
+      // Определяем устройства-приводы (тип "actuator")
+      const actuatorDevices = devices.filter(device => {
+        const deviceType = device.metadata?.device_type;
+        console.log(`Проверка устройства ${device.id}: device_type = "${deviceType}"`);
+        return deviceType === 'actuator';
+      });
+      
+      console.log('Устройства телеметрии:', telemetryDevices.length);
+      console.log('Устройства-приводы:', actuatorDevices.length);
       
       // Показываем/скрываем секции в зависимости от наличия устройств
       const telemetrySection = document.getElementById('telemetry-section');
@@ -527,6 +554,7 @@
       
       let html = '';
       devices.forEach(device => {
+        // Получаем тип устройства из метаданных API
         const deviceType = device.metadata?.device_type || 'unknown';
         const isActive = device.is_active ? 'online' : 'offline';
         const lastSeen = device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Никогда';
@@ -570,7 +598,7 @@
       
       // Находим все устройства телеметрии
       const telemetryDevices = devices.filter(device => 
-        device.metadata && device.metadata.device_type === 'telemetry'
+        device.metadata?.device_type === 'telemetry'
       );
       
       if (telemetryDevices.length === 0) {
@@ -590,6 +618,8 @@
         const telemetry = telemetryData[device.id];
         
         if (telemetry && telemetry.telemetry) {
+          console.log(`Телеметрия для устройства ${device.id}:`, telemetry.telemetry); // Для отладки
+          
           // Для каждого типа данных создаем карточку
           for (const [sensorType, samples] of Object.entries(telemetry.telemetry)) {
             if (samples && samples.length > 0) {
@@ -640,8 +670,10 @@
       
       // Находим все устройства-приводы
       const actuatorDevices = devices.filter(device => 
-        device.metadata && device.metadata.device_type === 'actuator'
+        device.metadata?.device_type === 'actuator'
       );
+      
+      console.log('Устройства-приводы для управления:', actuatorDevices); // Для отладки
       
       if (actuatorDevices.length === 0) {
         actuatorContainer.innerHTML = `
@@ -656,13 +688,20 @@
       let actuatorHTML = '';
       
       actuatorDevices.forEach(device => {
+        console.log(`Создание интерфейса для привода ${device.id}`); // Для отладки
+        
         // Получаем текущее положение привода из телеметрии (если есть)
         let currentPosition = 'неизвестно';
         if (telemetryData[device.id] && telemetryData[device.id].telemetry) {
           const telemetry = telemetryData[device.id].telemetry;
+          console.log(`Телеметрия привода ${device.id}:`, telemetry); // Для отладки
+          
           if (telemetry.position && telemetry.position.length > 0) {
             const lastPos = telemetry.position[telemetry.position.length - 1];
             currentPosition = `${lastPos.value}%`;
+          } else if (telemetry.status && telemetry.status.length > 0) {
+            const lastStatus = telemetry.status[telemetry.status.length - 1];
+            currentPosition = lastStatus.value === 'open' ? 'Открыт' : 'Закрыт';
           }
         }
         
@@ -709,7 +748,6 @@
         return;
       }
       
-      // Здесь можно добавить реальные графики с использованием библиотеки Chart.js
       chartsContainer.innerHTML = `
         <div class="chart-placeholder">
           <i class="fas fa-chart-line"></i> Температура (данные из API)
@@ -893,7 +931,6 @@
         if (response.ok) {
           alert('Устройство удалено');
           await loadDevices();
-          await loadTelemetryData();
         } else {
           alert('Не удалось удалить устройство');
         }
@@ -908,32 +945,15 @@
       
       try {
         // Здесь будет реальный вызов API для управления приводом
-        // Пример: POST /devices/{device_id}/command
-        const response = await fetch(`http://127.0.0.1:8001/devices/${deviceId}/command`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            command: command,
-            timestamp: new Date().toISOString()
-          })
-        });
+        alert(`Команда "${command}" отправлена на устройство ${deviceId} (демо-режим)`);
         
-        if (response.ok) {
-          alert(`Команда "${command}" успешно отправлена на устройство`);
-          // Обновляем данные через 2 секунды
-          setTimeout(async () => {
-            await loadTelemetryData();
-            updateActuatorUI();
-          }, 2000);
-        } else {
-          alert('Не удалось отправить команду');
-        }
+        // В демо-режиме обновляем данные через 2 секунды
+        setTimeout(async () => {
+          await loadTelemetryData();
+        }, 2000);
+        
       } catch (error) {
         console.error('Ошибка отправки команды:', error);
-        // Для демо показываем уведомление
         alert(`Команда "${command}" отправлена на устройство ${deviceId} (демо-режим)`);
       }
     }
