@@ -433,3 +433,15 @@ body {
     grid-template-columns: 1fr;
   }
 }
+/* Отключённое состояние кнопок */
+.btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  pointer-events: auto;
+}
+
+/* Опционально: специальный стиль для отключённой кнопки удаления */
+.btn-danger:disabled {
+  background: #f8d7da !important;
+  color: #721c24 !important;
+}
