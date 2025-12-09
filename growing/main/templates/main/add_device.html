@@ -82,13 +82,6 @@
           </div>
         </div>
         
-        <div class="form-group">
-          <label for="device-metadata">Дополнительные параметры (JSON, опционально)</label>
-          <textarea id="device-metadata" placeholder='{"location": "северная стена", "calibration": "v1.2", "unit": "°C"}'
-                    rows="3"></textarea>
-          <p class="form-help">Можно указать дополнительные параметры устройства в формате JSON</p>
-        </div>
-        
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" id="cancel-btn">
             <i class="fas fa-times"></i> Отмена
@@ -109,7 +102,7 @@
         </ul>
         <div class="example">
           <div>Пример серийного номера: <code>GH7890XYZ</code></div>
-          <div>Пример метаданных: <code>{"device_type": "telemetry", "unit": "°C", "precision": 0.1}</code></div>
+          <div>Тип устройства сохраняется автоматически в системе</div>
         </div>
       </div>
     </div>
@@ -232,7 +225,6 @@
       const deviceId = document.getElementById('device-id').value.trim();
       const deviceName = document.getElementById('device-name').value.trim();
       const deviceType = document.getElementById('device-type').value;
-      const metadataInput = document.getElementById('device-metadata').value.trim();
       
       if (!deviceId || !deviceName) {
         alert('Пожалуйста, заполните все обязательные поля.');
@@ -240,14 +232,10 @@
       }
       
       try {
-        // Парсим метаданные или создаем объект
-        let metadata = {};
-        if (metadataInput) {
-          metadata = JSON.parse(metadataInput);
-        }
-        
-        // Добавляем тип устройства в метаданные
-        metadata.device_type = deviceType;
+        // Создаем объект метаданных с типом устройства
+        const metadata = {
+          device_type: deviceType
+        };
         
         // Собираем данные для API
         const deviceData = {
@@ -287,12 +275,8 @@
         }
         
       } catch (error) {
-        if (error instanceof SyntaxError) {
-          alert('Ошибка в формате JSON метаданных. Проверьте правильность ввода.');
-        } else {
-          console.error('Ошибка добавления устройства:', error);
-          alert('Ошибка подключения к серверу');
-        }
+        console.error('Ошибка добавления устройства:', error);
+        alert('Ошибка подключения к серверу');
       }
     }
   </script>
