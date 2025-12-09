@@ -28,95 +28,273 @@
   <!-- Основной контент -->
   <main class="main">
     <header class="header">
-      <h1 class="page-title">Добавить новое устройство</h1>
+      <div class="breadcrumb">
+        <a href="/dashboard">Панель управления</a> / 
+        <a href="#" id="greenhouse-link">Теплица</a> / 
+        <span>Добавить устройство</span>
+      </div>
       <div class="user-info">
-        <div class="user-avatar">И</div>
-        <span>Иван Петров</span>
+        <div class="user-avatar" id="user-avatar">И</div>
+        <span id="user-name">Иван Петров</span>
       </div>
     </header>
 
     <div class="content">
+      <h1 class="page-title">Добавить устройство в теплицу</h1>
+      
+      <!-- Информация о теплице -->
+      <div class="greenhouse-info" id="greenhouse-info">
+        <i class="fas fa-leaf"></i>
+        <span id="current-greenhouse-name">Загрузка...</span>
+      </div>
+
       <div class="intro">
-        <p>Чтобы подключить устройство к вашему аккаунту, используйте один из способов ниже.</p>
+        <p>Введите серийный номер устройства и выберите его тип для привязки к текущей теплице.</p>
       </div>
 
-      <div class="tabs">
-        <button class="tab active" data-tab="qr">Сканировать QR-код</button>
-        <button class="tab" data-tab="manual">Ввести вручную</button>
-      </div>
-
-      <!-- Сканирование QR-кода -->
-      <div id="qr-tab" class="tab-content active">
-        <div class="qr-instruction">
-          <p><i class="fas fa-info-circle"></i> Наведите камеру на QR-код с наклейки на устройстве</p>
+      <!-- Форма добавления устройства -->
+      <form id="add-device-form">
+        <div class="form-group">
+          <label for="device-id">Серийный номер устройства</label>
+          <input type="text" id="device-id" placeholder="Введите серийный номер (например: GH7890XYZ)" required>
+          <p class="form-help">Серийный номер указан на устройстве или в документации</p>
         </div>
-        <div class="qr-camera-placeholder">
-          <div class="camera-viewfinder"></div>
-          <div class="camera-label">Имитация камеры</div>
+        
+        <div class="form-group">
+          <label for="device-name">Название устройства</label>
+          <input type="text" id="device-name" placeholder="Дайте понятное название (например: Датчик температуры 1)" required>
         </div>
-        <div class="qr-result">
-          <p>QR-код распознан:</p>
-          <div class="qr-data">
-            <strong>Device ID:</strong> GH7890XYZ<br>
-            <strong>Access Token:</strong> ••••••••••••••••
+        
+        <div class="form-group">
+          <label for="device-type">Тип устройства</label>
+          <div class="device-type-carousel">
+            <button type="button" class="type-option active" data-type="telemetry">
+              <i class="fas fa-thermometer-half"></i>
+              <span>Телеметрия</span>
+              <p class="type-description">Сенсоры (температура, влажность, освещение)</p>
+            </button>
+            <button type="button" class="type-option" data-type="actuator">
+              <i class="fas fa-cogs"></i>
+              <span>Привод</span>
+              <p class="type-description">Исполнительные механизмы (вентиляция, полив, свет)</p>
+            </button>
+            <input type="hidden" id="device-type" value="telemetry">
           </div>
-          <button class="btn primary" id="confirm-qr">Подключить устройство</button>
         </div>
-      </div>
-
-      <!-- Ручной ввод -->
-      <div id="manual-tab" class="tab-content">
+        
         <div class="form-group">
-          <label for="device-id">Device ID</label>
-          <input type="text" id="device-id" placeholder="Например: GH7890XYZ" required>
+          <label for="device-metadata">Дополнительные параметры (JSON, опционально)</label>
+          <textarea id="device-metadata" placeholder='{"location": "северная стена", "calibration": "v1.2", "unit": "°C"}'
+                    rows="3"></textarea>
+          <p class="form-help">Можно указать дополнительные параметры устройства в формате JSON</p>
         </div>
-        <div class="form-group">
-          <label for="access-token">Access Token</label>
-          <input type="password" id="access-token" placeholder="Секретный токен устройства" required>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-btn">
+            <i class="fas fa-times"></i> Отмена
+          </button>
+          <button type="submit" class="btn" id="confirm-btn">
+            <i class="fas fa-plus"></i> Добавить устройство
+          </button>
         </div>
-        <button class="btn primary" id="confirm-manual">Подключить устройство</button>
-      </div>
+      </form>
 
       <div class="help-section">
-        <h3><i class="fas fa-question-circle"></i> Где найти данные?</h3>
-        <p>Device ID и Access Token указаны на наклейке устройства или в комплектной документации. Обычно они выглядят так:</p>
+        <h3><i class="fas fa-question-circle"></i> Как найти серийный номер?</h3>
+        <p>Серийный номер обычно указан:</p>
+        <ul>
+          <li>На наклейке на корпусе устройства</li>
+          <li>В руководстве пользователя</li>
+          <li>На упаковке устройства</li>
+        </ul>
         <div class="example">
-          <div>Device ID: <code>GH7890XYZ</code></div>
-          <div>Access Token: <code>a1b2c3d4e5f6...</code></div>
+          <div>Пример серийного номера: <code>GH7890XYZ</code></div>
+          <div>Пример метаданных: <code>{"device_type": "telemetry", "unit": "°C", "precision": 0.1}</code></div>
         </div>
       </div>
     </div>
   </main>
 
   <script>
-    // Переключение вкладок
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        tab.classList.add('active');
-        const target = tab.dataset.tab;
-        document.getElementById(target + '-tab').classList.add('active');
-      });
+    let currentGreenhouseId = null;
+    let currentGreenhouseName = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Загружаем данные пользователя
+      loadUserProfile();
+      
+      // Получаем ID теплицы из URL или localStorage
+      loadGreenhouseData();
+      
+      // Инициализация обработчиков
+      initEventHandlers();
     });
 
-    // Имитация подтверждения
-    document.getElementById('confirm-qr').addEventListener('click', () => {
-      alert('Устройство успешно добавлено!\nПеренаправление на панель управления...');
-      window.location.href = '/dashboard';
-    });
-
-    document.getElementById('confirm-manual').addEventListener('click', () => {
-      const id = document.getElementById('device-id').value;
-      const token = document.getElementById('access-token').value;
-      if (id && token) {
-        alert('Устройство успешно добавлено!\nПеренаправление на панель управления...');
-        window.location.href = '/dashboard';
-      } else {
-        alert('Пожалуйста, заполните все поля.');
+    function loadUserProfile() {
+      const userProfile = JSON.parse(localStorage.getItem('user_profile'));
+      const userNameElement = document.getElementById('user-name');
+      const userAvatarElement = document.getElementById('user-avatar');
+      
+      if (userProfile && userProfile.name) {
+        if (userNameElement) userNameElement.textContent = userProfile.name;
+        if (userAvatarElement) userAvatarElement.textContent = userProfile.name.charAt(0).toUpperCase();
       }
-    });
+    }
+
+    function loadGreenhouseData() {
+      // Получаем ID теплицы из URL параметров или localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      currentGreenhouseId = urlParams.get('greenhouse_id') || localStorage.getItem('current_greenhouse_id');
+      currentGreenhouseName = localStorage.getItem('current_greenhouse_name');
+      
+      if (!currentGreenhouseId) {
+        alert('Не выбрана теплица. Перенаправление на панель управления...');
+        window.location.href = '/dashboard';
+        return;
+      }
+      
+      // Загружаем данные теплицы из API
+      fetchGreenhouseData();
+    }
+
+    async function fetchGreenhouseData() {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.error('Требуется авторизация');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          updateGreenhouseUI(data);
+        } else {
+          console.error('Ошибка загрузки данных теплицы');
+          // Используем данные из localStorage
+          if (currentGreenhouseName) {
+            updateGreenhouseUI({ name: currentGreenhouseName });
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка подключения к серверу:', error);
+        // Используем данные из localStorage
+        if (currentGreenhouseName) {
+          updateGreenhouseUI({ name: currentGreenhouseName });
+        }
+      }
+    }
+
+    function updateGreenhouseUI(data) {
+      const greenhouseNameElement = document.getElementById('current-greenhouse-name');
+      const greenhouseLinkElement = document.getElementById('greenhouse-link');
+      
+      if (greenhouseNameElement) {
+        greenhouseNameElement.textContent = data.name;
+      }
+      
+      if (greenhouseLinkElement) {
+        greenhouseLinkElement.textContent = data.name;
+        greenhouseLinkElement.href = `/greenhouse_detail?greenhouse_id=${currentGreenhouseId}`;
+      }
+    }
+
+    function initEventHandlers() {
+      // Выбор типа устройства (карусель)
+      document.querySelectorAll('.type-option').forEach(option => {
+        option.addEventListener('click', () => {
+          document.querySelectorAll('.type-option').forEach(opt => {
+            opt.classList.remove('active');
+          });
+          option.classList.add('active');
+          document.getElementById('device-type').value = option.dataset.type;
+        });
+      });
+
+      // Кнопка отмены
+      document.getElementById('cancel-btn').addEventListener('click', () => {
+        window.location.href = `/greenhouse_detail?greenhouse_id=${currentGreenhouseId}`;
+      });
+
+      // Отправка формы
+      document.getElementById('add-device-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await addDevice();
+      });
+    }
+
+    async function addDevice() {
+      const deviceId = document.getElementById('device-id').value.trim();
+      const deviceName = document.getElementById('device-name').value.trim();
+      const deviceType = document.getElementById('device-type').value;
+      const metadataInput = document.getElementById('device-metadata').value.trim();
+      
+      if (!deviceId || !deviceName) {
+        alert('Пожалуйста, заполните все обязательные поля.');
+        return;
+      }
+      
+      try {
+        // Парсим метаданные или создаем объект
+        let metadata = {};
+        if (metadataInput) {
+          metadata = JSON.parse(metadataInput);
+        }
+        
+        // Добавляем тип устройства в метаданные
+        metadata.device_type = deviceType;
+        
+        // Собираем данные для API
+        const deviceData = {
+          name: deviceName,
+          serial_number: deviceId,
+          greenhouse_id: parseInt(currentGreenhouseId),
+          metadata: metadata
+        };
+        
+        // Отправляем запрос к API
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          alert('Требуется авторизация. Пожалуйста, войдите в систему.');
+          return;
+        }
+        
+        const response = await fetch('http://127.0.0.1:8001/devices/', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(deviceData)
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Устройство успешно добавлено:', result);
+          alert('Устройство успешно добавлено в теплицу!');
+          
+          // Перенаправляем обратно в теплицу
+          window.location.href = `/greenhouse_detail?greenhouse_id=${currentGreenhouseId}`;
+        } else {
+          const errorData = await response.json();
+          console.error('Ошибка добавления устройства:', errorData);
+          alert('Ошибка добавления устройства: ' + (errorData.detail || 'Неизвестная ошибка'));
+        }
+        
+      } catch (error) {
+        if (error instanceof SyntaxError) {
+          alert('Ошибка в формате JSON метаданных. Проверьте правильность ввода.');
+        } else {
+          console.error('Ошибка добавления устройства:', error);
+          alert('Ошибка подключения к серверу');
+        }
+      }
+    }
   </script>
 </body>
 </html>

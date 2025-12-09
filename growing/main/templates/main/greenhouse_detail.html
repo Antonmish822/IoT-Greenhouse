@@ -12,11 +12,11 @@
     .greenhouse-actions {
       display: flex;
       gap: 10px;
-      margin-left: auto;
     }
     
     .btn-secondary {
       background: #6c757d;
+      color: white;
     }
     
     .btn-secondary:hover {
@@ -25,10 +25,20 @@
     
     .btn-danger {
       background: var(--danger);
+      color: white;
     }
     
     .btn-danger:hover {
       background: #d32f2f;
+    }
+    
+    .btn-add-device {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-add-device:hover {
+      background: var(--primary-dark);
     }
     
     .modal {
@@ -79,12 +89,68 @@
       color: #888;
     }
     
-    /* Стили для форм */
     .form-actions {
       display: flex;
       gap: 10px;
       margin-top: 20px;
       justify-content: flex-end;
+    }
+    
+    /* Пустые состояния */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      color: #ddd;
+      margin-bottom: 16px;
+    }
+    
+    .empty-state p {
+      margin-bottom: 16px;
+    }
+    
+    /* Карточка устройства */
+    .device-card {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .device-info h4 {
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .device-status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-online {
+      background: rgba(76, 175, 80, 0.15);
+      color: var(--primary);
+    }
+    
+    .status-offline {
+      background: rgba(244, 67, 54, 0.15);
+      color: var(--danger);
+    }
+    
+    .device-actions {
+      display: flex;
+      gap: 8px;
     }
   </style>
 </head>
@@ -109,13 +175,14 @@
   <main class="main">
     <header class="header">
       <div class="breadcrumb">
+        <a href="/dashboard">Панель управления</a> / 
         <span id="breadcrumb-greenhouse-name">Теплица на даче</span>
       </div>
       <div class="header-actions">
-        <a href="/add_device" class="btn">
+        <button class="btn btn-add-device" id="add-device-btn">
           <i class="fas fa-plus"></i>
           Добавить устройство
-        </a>
+        </button>
         <div class="greenhouse-actions">
           <button class="btn btn-secondary" id="edit-greenhouse-btn">
             <i class="fas fa-edit"></i>
@@ -140,26 +207,33 @@
       </h1>
       
       <!-- Информация о местоположении -->
-      <div class="location-info" id="location-info">
+      <div class="location-info" id="location-info" style="display: none;">
         <i class="fas fa-map-marker-alt"></i>
         <span id="greenhouse-location">Москва, дачный участок №5</span>
       </div>
 
-      <!-- Текущие показатели -->
+      <!-- Список устройств -->
+      <section class="section">
+        <h2 class="section-title">Устройства в теплице</h2>
+        <div id="devices-list">
+          <div class="empty-state">
+            <i class="fas fa-plug"></i>
+            <h3>Нет устройств</h3>
+            <p>Добавьте устройства для мониторинга и управления теплицей</p>
+            <button class="btn btn-add-device" id="empty-add-device-btn">
+              <i class="fas fa-plus"></i> Добавить устройство
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Текущие показатели (будут заполняться автоматически) -->
       <section class="section">
         <h2 class="section-title">Текущие показатели</h2>
-        <div class="metrics">
-          <div class="metric-card">
-            <div class="metric-value">26.5°C</div>
-            <div class="metric-label">Температура</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-value">68%</div>
-            <div class="metric-label">Влажность</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-value">100%</div>
-            <div class="metric-label">Положение привода</div>
+        <div class="metrics" id="metrics-container">
+          <div class="empty-state">
+            <i class="fas fa-chart-line"></i>
+            <p>Нет данных с устройств телеметрии</p>
           </div>
         </div>
       </section>
@@ -167,81 +241,36 @@
       <!-- Графики -->
       <section class="section">
         <h2 class="section-title">Графики за 24 часа</h2>
-        <div class="charts">
-          <div class="chart-placeholder">
-            <i class="fas fa-chart-line"></i> Температура
-          </div>
-          <div class="chart-placeholder">
-            <i class="fas fa-tint"></i> Влажность
+        <div class="charts" id="charts-container">
+          <div class="empty-state">
+            <i class="fas fa-chart-area"></i>
+            <p>Нет данных для построения графиков</p>
           </div>
         </div>
       </section>
 
-      <!-- Управление приводом -->
-      <section class="section">
+      <!-- Управление приводом (будет появляться при наличии приводов) -->
+      <section class="section" id="actuator-control-section" style="display: none;">
         <h2 class="section-title">Управление приводом</h2>
-        <div class="controls">
-          <button class="control-btn open">
-            <i class="fas fa-arrow-up"></i>
-            Открыть
-          </button>
-          <button class="control-btn close">
-            <i class="fas fa-arrow-down"></i>
-            Закрыть
-          </button>
-          <button class="control-btn stop">
-            <i class="fas fa-stop"></i>
-            Остановить
-          </button>
-        </div>
-
-        <!-- Режимы -->
-        <div class="mode-toggle">
-          <div class="mode-option" id="manual-mode">
-            <h4>Ручной режим</h4>
-            <p>Управление вручную</p>
-          </div>
-          <div class="mode-option active" id="auto-mode">
-            <h4>Автоматический режим</h4>
-            <p>По заданным правилам</p>
-          </div>
-        </div>
-
-        <!-- Настройки автоматики -->
-        <div id="auto-settings" class="auto-settings">
-          <div class="form-group">
-            <label for="open-threshold">Открывать при T > (°C)</label>
-            <input type="number" id="open-threshold" value="28" min="10" max="40">
-          </div>
-          <div class="form-group">
-            <label for="close-threshold">Закрывать при T < (°C)</label>
-            <input type="number" id="close-threshold" value="24" min="10" max="40">
-          </div>
+        <div class="controls" id="actuator-controls">
+          <!-- Кнопки управления появятся здесь -->
         </div>
       </section>
 
       <!-- История событий -->
       <section class="section">
         <h2 class="section-title">История событий</h2>
-        <ul class="events-list">
-          <li class="event-item">
-            <div class="event-time">22 мая, 14:30</div>
-            <div class="event-desc">Температура 31°C. Начато открывание привода.</div>
-          </li>
-          <li class="event-item">
-            <div class="event-time">22 мая, 14:32</div>
-            <div class="event-desc">Привод достиг положения 100%.</div>
-          </li>
-          <li class="event-item">
-            <div class="event-time">22 мая, 18:05</div>
-            <div class="event-desc">Температура упала до 24°C. Начато закрывание.</div>
-          </li>
+        <ul class="events-list" id="events-list">
+          <div class="empty-state">
+            <i class="fas fa-history"></i>
+            <p>История событий появится здесь</p>
+          </div>
         </ul>
       </section>
     </div>
   </main>
 
-  <!-- Модальное окно редактирования теплицы -->
+  <!-- Модальные окна -->
   <div class="modal" id="edit-modal">
     <div class="modal-content">
       <h3 class="modal-title">Редактирование теплицы</h3>
@@ -256,7 +285,7 @@
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" id="cancel-edit-btn">Отмена</button>
-          <button type="submit" class="btn" id="save-edit-btn">
+          <button type="submit" class="btn btn-add-device" id="save-edit-btn">
             <i class="fas fa-save"></i> Сохранить
           </button>
         </div>
@@ -264,7 +293,6 @@
     </div>
   </div>
 
-  <!-- Модальное окно подтверждения удаления -->
   <div class="modal" id="delete-modal">
     <div class="modal-content">
       <h3 class="modal-title">Удаление теплицы</h3>
@@ -284,28 +312,33 @@
     // Глобальные переменные
     let currentGreenhouseId = null;
     let currentGreenhouseData = null;
+    let devices = [];
+    let telemetryData = {};
 
     document.addEventListener('DOMContentLoaded', function() {
       // Загружаем данные теплицы из URL параметров
       loadGreenhouseData();
       loadUserProfile();
       
-      // Инициализация модальных окон
+      // Инициализация
       initModals();
-      
-      // Инициализация обработчиков кнопок
       initEventHandlers();
     });
 
-    // Загрузка данных теплицы из API
+    // Загрузка данных теплицы
     async function loadGreenhouseData() {
       const urlParams = new URLSearchParams(window.location.search);
       currentGreenhouseId = urlParams.get('greenhouse_id');
       
       if (!currentGreenhouseId) {
         console.error('ID теплицы не указан в URL');
+        alert('Теплица не выбрана');
+        window.location.href = '/dashboard';
         return;
       }
+      
+      // Сохраняем ID теплицы для страницы добавления устройства
+      localStorage.setItem('current_greenhouse_id', currentGreenhouseId);
       
       const token = localStorage.getItem('access_token');
       if (!token) {
@@ -314,26 +347,353 @@
       }
       
       try {
-        const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        // Загружаем данные теплицы
+        const greenhouseResponse = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (response.ok) {
-          currentGreenhouseData = await response.json();
+        if (greenhouseResponse.ok) {
+          currentGreenhouseData = await greenhouseResponse.json();
+          localStorage.setItem('current_greenhouse_name', currentGreenhouseData.name);
           updateUIWithGreenhouseData(currentGreenhouseData);
+          
+          // Загружаем устройства этой теплицы
+          await loadDevices();
+          
+          // Загружаем телеметрию для каждого устройства
+          await loadTelemetry();
         } else {
-          console.error('Ошибка загрузки данных теплицы:', response.status);
-          alert('Не удалось загрузить данные теплицы');
+          console.error('Ошибка загрузки данных теплицы');
         }
       } catch (error) {
         console.error('Ошибка загрузки данных теплицы:', error);
-        alert('Ошибка подключения к серверу');
       }
     }
 
-    // Загрузка профиля пользователя
+    // Загрузка устройств теплицы
+    async function loadDevices() {
+      const token = localStorage.getItem('access_token');
+      
+      try {
+        const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}/devices`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          devices = await response.json();
+          updateDevicesUI();
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки устройств:', error);
+      }
+    }
+
+    // Загрузка телеметрии для всех устройств
+    async function loadTelemetry() {
+      const token = localStorage.getItem('access_token');
+      telemetryData = {};
+      
+      for (const device of devices) {
+        if (device.metadata?.device_type === 'telemetry') {
+          try {
+            const response = await fetch(`http://127.0.0.1:8001/telemetry/${device.id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+              const telemetry = await response.json();
+              telemetryData[device.id] = telemetry;
+            }
+          } catch (error) {
+            console.error(`Ошибка загрузки телеметрии для устройства ${device.id}:`, error);
+          }
+        }
+      }
+      
+      updateMetricsUI();
+      updateChartsUI();
+      updateActuatorControls();
+    }
+
+    // Обновление UI с данными теплицы
+    function updateUIWithGreenhouseData(data) {
+      document.getElementById('page-title').textContent = `${data.name} — Умная теплица`;
+      document.getElementById('sidebar-greenhouse-name').textContent = data.name;
+      document.getElementById('breadcrumb-greenhouse-name').textContent = data.name;
+      document.getElementById('greenhouse-name').textContent = data.name;
+      document.getElementById('delete-greenhouse-name').textContent = data.name;
+      
+      const locationElement = document.getElementById('greenhouse-location');
+      const deleteLocationElement = document.getElementById('delete-location-info');
+      
+      if (data.location) {
+        locationElement.textContent = data.location;
+        deleteLocationElement.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(data.location)}`;
+        document.getElementById('location-info').style.display = 'flex';
+      }
+      
+      const statusElement = document.getElementById('greenhouse-status');
+      if (data.is_active) {
+        statusElement.textContent = 'Онлайн';
+        statusElement.className = 'status-badge';
+      } else {
+        statusElement.textContent = 'Оффлайн';
+        statusElement.className = 'status-badge offline';
+      }
+      
+      document.getElementById('edit-name').value = data.name;
+      document.getElementById('edit-location').value = data.location || '';
+    }
+
+    // Обновление списка устройств
+    function updateDevicesUI() {
+      const devicesList = document.getElementById('devices-list');
+      
+      if (devices.length === 0) {
+        devicesList.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-plug"></i>
+            <h3>Нет устройств</h3>
+            <p>Добавьте устройства для мониторинга и управления теплицей</p>
+            <button class="btn btn-add-device" id="empty-add-device-btn">
+              <i class="fas fa-plus"></i> Добавить устройство
+            </button>
+          </div>
+        `;
+        document.getElementById('empty-add-device-btn').addEventListener('click', goToAddDevice);
+        return;
+      }
+      
+      let html = '';
+      devices.forEach(device => {
+        const deviceType = device.metadata?.device_type || 'unknown';
+        const isActive = device.is_active ? 'online' : 'offline';
+        const lastSeen = device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Никогда';
+        
+        html += `
+          <div class="device-card">
+            <div class="device-info">
+              <h4>${escapeHtml(device.name)}</h4>
+              <div>
+                <span class="device-status status-${isActive}">${isActive === 'online' ? 'Онлайн' : 'Оффлайн'}</span>
+                <span style="margin-left: 10px; color: #666; font-size: 14px;">
+                  Тип: ${deviceType === 'telemetry' ? 'Телеметрия' : 'Привод'}
+                </span>
+              </div>
+              <div style="margin-top: 8px; font-size: 13px; color: #888;">
+                Серийный номер: ${device.serial_number} | Последняя активность: ${lastSeen}
+              </div>
+            </div>
+            <div class="device-actions">
+              <button class="btn btn-secondary" onclick="removeDevice(${device.id})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      
+      devicesList.innerHTML = html;
+    }
+
+    // Обновление показателей
+    function updateMetricsUI() {
+      const metricsContainer = document.getElementById('metrics-container');
+      const telemetryDevices = devices.filter(d => d.metadata?.device_type === 'telemetry');
+      
+      if (telemetryDevices.length === 0) {
+        metricsContainer.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-chart-line"></i>
+            <p>Нет данных с устройств телеметрии</p>
+          </div>
+        `;
+        return;
+      }
+      
+      let metricsHTML = '';
+      
+      // Собираем последние значения из телеметрии
+      for (const device of telemetryDevices) {
+        const telemetry = telemetryData[device.id];
+        if (telemetry && telemetry.telemetry) {
+          // Берем последнее значение для каждого типа данных
+          for (const [key, samples] of Object.entries(telemetry.telemetry)) {
+            if (samples.length > 0) {
+              const lastSample = samples[samples.length - 1];
+              const displayName = getDisplayName(key);
+              
+              metricsHTML += `
+                <div class="metric-card">
+                  <div class="metric-value">${formatValue(lastSample.value)}${getUnit(key)}</div>
+                  <div class="metric-label">${displayName}</div>
+                  <div style="font-size: 12px; color: #888; margin-top: 4px;">${device.name}</div>
+                </div>
+              `;
+            }
+          }
+        }
+      }
+      
+      if (metricsHTML === '') {
+        metricsHTML = `
+          <div class="empty-state">
+            <i class="fas fa-chart-line"></i>
+            <p>Нет данных с устройств телеметрии</p>
+          </div>
+        `;
+      }
+      
+      metricsContainer.innerHTML = metricsHTML;
+    }
+
+    // Обновление графиков
+    function updateChartsUI() {
+      const chartsContainer = document.getElementById('charts-container');
+      
+      if (Object.keys(telemetryData).length === 0) {
+        chartsContainer.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-chart-area"></i>
+            <p>Нет данных для построения графиков</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Здесь можно добавить реальные графики с использованием библиотеки (Chart.js и т.д.)
+      chartsContainer.innerHTML = `
+        <div class="chart-placeholder">
+          <i class="fas fa-chart-line"></i> Данные с телеметрии
+        </div>
+        <div class="chart-placeholder">
+          <i class="fas fa-tint"></i> Графики будут отображаться здесь
+        </div>
+      `;
+    }
+
+    // Обновление управления приводами
+    function updateActuatorControls() {
+      const actuatorSection = document.getElementById('actuator-control-section');
+      const actuatorControls = document.getElementById('actuator-controls');
+      const actuatorDevices = devices.filter(d => d.metadata?.device_type === 'actuator');
+      
+      if (actuatorDevices.length === 0) {
+        actuatorSection.style.display = 'none';
+        return;
+      }
+      
+      actuatorSection.style.display = 'block';
+      
+      let controlsHTML = '';
+      actuatorDevices.forEach(device => {
+        controlsHTML += `
+          <div style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+            <h4 style="margin-bottom: 12px;">${escapeHtml(device.name)}</h4>
+            <div class="controls">
+              <button class="control-btn open" onclick="sendCommand(${device.id}, 'open')">
+                <i class="fas fa-arrow-up"></i>
+                Открыть
+              </button>
+              <button class="control-btn close" onclick="sendCommand(${device.id}, 'close')">
+                <i class="fas fa-arrow-down"></i>
+                Закрыть
+              </button>
+              <button class="control-btn stop" onclick="sendCommand(${device.id}, 'stop')">
+                <i class="fas fa-stop"></i>
+                Остановить
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      
+      actuatorControls.innerHTML = controlsHTML;
+    }
+
+    // Вспомогательные функции
+    function getDisplayName(key) {
+      const names = {
+        'temperature': 'Температура',
+        'humidity': 'Влажность',
+        'light': 'Освещенность',
+        'soil_moisture': 'Влажность почвы',
+        'pressure': 'Давление',
+        'position': 'Положение'
+      };
+      return names[key] || key;
+    }
+
+    function getUnit(key) {
+      const units = {
+        'temperature': '°C',
+        'humidity': '%',
+        'light': 'lx',
+        'soil_moisture': '%',
+        'pressure': 'hPa',
+        'position': '%'
+      };
+      return units[key] || '';
+    }
+
+    function formatValue(value) {
+      if (typeof value === 'number') {
+        return value.toFixed(2);
+      }
+      return value;
+    }
+
+    // Инициализация модальных окон
+    function initModals() {
+      const editModal = document.getElementById('edit-modal');
+      const deleteModal = document.getElementById('delete-modal');
+      
+      document.getElementById('edit-greenhouse-btn').addEventListener('click', () => {
+        editModal.style.display = 'flex';
+      });
+      
+      document.getElementById('delete-greenhouse-btn').addEventListener('click', () => {
+        deleteModal.style.display = 'flex';
+      });
+      
+      document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+        editModal.style.display = 'none';
+      });
+      
+      document.getElementById('cancel-delete-btn').addEventListener('click', () => {
+        deleteModal.style.display = 'none';
+      });
+      
+      window.addEventListener('click', (event) => {
+        if (event.target === editModal) editModal.style.display = 'none';
+        if (event.target === deleteModal) deleteModal.style.display = 'none';
+      });
+    }
+
+    // Инициализация обработчиков событий
+    function initEventHandlers() {
+      // Форма редактирования
+      document.getElementById('edit-greenhouse-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await updateGreenhouse();
+      });
+      
+      // Подтверждение удаления
+      document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+        await deleteGreenhouse();
+      });
+      
+      // Кнопка добавления устройства
+      document.getElementById('add-device-btn').addEventListener('click', goToAddDevice);
+      
+      // Загрузка профиля пользователя
+      loadUserProfile();
+    }
+
+    function goToAddDevice() {
+      window.location.href = `/add_device?greenhouse_id=${currentGreenhouseId}`;
+    }
+
     async function loadUserProfile() {
       const userProfile = JSON.parse(localStorage.getItem('user_profile'));
       const userNameElement = document.getElementById('user-name');
@@ -345,115 +705,6 @@
       }
     }
 
-    // Обновление UI с данными теплицы
-    function updateUIWithGreenhouseData(data) {
-      // Обновляем название на всех элементах
-      document.getElementById('page-title').textContent = `${data.name} — Умная теплица`;
-      document.getElementById('sidebar-greenhouse-name').textContent = data.name;
-      document.getElementById('breadcrumb-greenhouse-name').textContent = data.name;
-      document.getElementById('greenhouse-name').textContent = data.name;
-      document.getElementById('delete-greenhouse-name').textContent = data.name;
-      
-      // Обновляем местоположение
-      const locationElement = document.getElementById('greenhouse-location');
-      const deleteLocationElement = document.getElementById('delete-location-info');
-      
-      if (data.location) {
-        locationElement.textContent = data.location;
-        deleteLocationElement.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(data.location)}`;
-        document.getElementById('location-info').style.display = 'flex';
-      } else {
-        locationElement.textContent = 'Местоположение не указано';
-        deleteLocationElement.textContent = 'Местоположение не указано';
-        document.getElementById('location-info').style.display = 'flex';
-      }
-      
-      // Обновляем статус
-      const statusElement = document.getElementById('greenhouse-status');
-      if (data.is_active) {
-        statusElement.textContent = 'Онлайн';
-        statusElement.className = 'status-badge';
-      } else {
-        statusElement.textContent = 'Оффлайн';
-        statusElement.className = 'status-badge offline';
-      }
-      
-      // Заполняем форму редактирования
-      document.getElementById('edit-name').value = data.name;
-      document.getElementById('edit-location').value = data.location || '';
-    }
-
-    // Инициализация модальных окон
-    function initModals() {
-      const editModal = document.getElementById('edit-modal');
-      const deleteModal = document.getElementById('delete-modal');
-      
-      // Кнопка редактирования
-      document.getElementById('edit-greenhouse-btn').addEventListener('click', () => {
-        editModal.style.display = 'flex';
-      });
-      
-      // Кнопка удаления
-      document.getElementById('delete-greenhouse-btn').addEventListener('click', () => {
-        deleteModal.style.display = 'flex';
-      });
-      
-      // Закрытие модальных окон
-      document.getElementById('cancel-edit-btn').addEventListener('click', () => {
-        editModal.style.display = 'none';
-      });
-      
-      document.getElementById('cancel-delete-btn').addEventListener('click', () => {
-        deleteModal.style.display = 'none';
-      });
-      
-      // Закрытие по клику вне модального окна
-      window.addEventListener('click', (event) => {
-        if (event.target === editModal) {
-          editModal.style.display = 'none';
-        }
-        if (event.target === deleteModal) {
-          deleteModal.style.display = 'none';
-        }
-      });
-    }
-
-    // Инициализация обработчиков событий
-    function initEventHandlers() {
-      // Обработка формы редактирования
-      document.getElementById('edit-greenhouse-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await updateGreenhouse();
-      });
-      
-      // Обработка подтверждения удаления
-      document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
-        await deleteGreenhouse();
-      });
-      
-      // Переключение режимов
-      document.getElementById('manual-mode').addEventListener('click', () => {
-        document.getElementById('manual-mode').classList.add('active');
-        document.getElementById('auto-mode').classList.remove('active');
-        document.getElementById('auto-settings').style.display = 'none';
-      });
-
-      document.getElementById('auto-mode').addEventListener('click', () => {
-        document.getElementById('auto-mode').classList.add('active');
-        document.getElementById('manual-mode').classList.remove('active');
-        document.getElementById('auto-settings').style.display = 'grid';
-      });
-
-      // Обработка кнопок управления
-      document.querySelectorAll('.control-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const action = btn.textContent.trim();
-          alert(`Команда отправлена: ${action}`);
-        });
-      });
-    }
-
-    // Обновление данных теплицы
     async function updateGreenhouse() {
       const name = document.getElementById('edit-name').value.trim();
       const location = document.getElementById('edit-location').value.trim();
@@ -485,12 +736,11 @@
         if (response.ok) {
           const updatedData = await response.json();
           currentGreenhouseData = updatedData;
+          localStorage.setItem('current_greenhouse_name', updatedData.name);
           updateUIWithGreenhouseData(updatedData);
           document.getElementById('edit-modal').style.display = 'none';
           alert('Теплица успешно обновлена');
         } else {
-          const errorData = await response.json();
-          console.error('Ошибка обновления теплицы:', errorData);
           alert('Не удалось обновить теплицу');
         }
       } catch (error) {
@@ -499,7 +749,6 @@
       }
     }
 
-    // Удаление теплицы
     async function deleteGreenhouse() {
       const token = localStorage.getItem('access_token');
       if (!token) {
@@ -510,18 +759,13 @@
       try {
         const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (response.ok) {
           alert('Теплица успешно удалена');
-          // Перенаправляем на dashboard
           window.location.href = '/dashboard';
         } else {
-          const errorData = await response.json();
-          console.error('Ошибка удаления теплицы:', errorData);
           alert('Не удалось удалить теплицу');
         }
       } catch (error) {
@@ -530,7 +774,34 @@
       }
     }
 
-    // Экранирование HTML для безопасности
+    async function removeDevice(deviceId) {
+      if (!confirm('Вы уверены, что хотите удалить это устройство?')) return;
+      
+      const token = localStorage.getItem('access_token');
+      try {
+        const response = await fetch(`http://127.0.0.1:8001/devices/${deviceId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          alert('Устройство удалено');
+          await loadDevices();
+          await loadTelemetry();
+        } else {
+          alert('Не удалось удалить устройство');
+        }
+      } catch (error) {
+        console.error('Ошибка удаления устройства:', error);
+        alert('Ошибка подключения к серверу');
+      }
+    }
+
+    function sendCommand(deviceId, command) {
+      alert(`Команда "${command}" отправлена на устройство ${deviceId}`);
+      // Здесь будет реальный вызов API для управления приводом
+    }
+
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
