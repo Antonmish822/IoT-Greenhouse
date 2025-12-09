@@ -24,7 +24,7 @@
     }
     
     .btn-danger {
-      background: var(--danger);
+      background: var(--danger, #dc3545);
       color: white;
     }
     
@@ -33,12 +33,17 @@
     }
     
     .btn-add-device {
-      background: var(--primary);
+      background: var(--primary, #007bff);
       color: white;
     }
     
     .btn-add-device:hover {
-      background: var(--primary-dark);
+      background: var(--primary-dark, #0056b3);
+    }
+
+    .btn:disabled {
+      opacity: 0.6 !important;
+      cursor: not-allowed !important;
     }
     
     .modal {
@@ -66,7 +71,7 @@
     .modal-title {
       margin-bottom: 20px;
       font-size: 20px;
-      color: var(--dark);
+      color: var(--dark, #333);
     }
     
     .modal-actions {
@@ -140,12 +145,12 @@
     
     .status-online {
       background: rgba(76, 175, 80, 0.15);
-      color: var(--primary);
+      color: var(--primary, #28a745);
     }
     
     .status-offline {
       background: rgba(244, 67, 54, 0.15);
-      color: var(--danger);
+      color: var(--danger, #dc3545);
     }
     
     .device-actions {
@@ -196,7 +201,7 @@
     
     .position-value {
       font-weight: 600;
-      color: var(--primary);
+      color: var(--primary, #007bff);
     }
   </style>
 </head>
@@ -330,7 +335,7 @@
       <h3 class="modal-title">Удаление теплицы</h3>
       <p>Вы уверены, что хотите удалить теплицу "<span id="delete-greenhouse-name"></span>"?</p>
       <p class="location-info" id="delete-location-info"></p>
-      <p><strong>Внимание:</strong> Это действие нельзя отменить. Все устройства и данные этой теплицы будут удалены.</p>
+      <p><strong>Внимание:</strong> Это действие нельзя отменить.</p>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" id="cancel-delete-btn">Отмена</button>
         <button type="button" class="btn btn-danger" id="confirm-delete-btn">
@@ -374,7 +379,6 @@
       }
       
       try {
-        // Загружаем данные теплицы
         const greenhouseResponse = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -383,8 +387,6 @@
           currentGreenhouseData = await greenhouseResponse.json();
           localStorage.setItem('current_greenhouse_name', currentGreenhouseData.name);
           updateUIWithGreenhouseData(currentGreenhouseData);
-          
-          // Загружаем устройства
           await loadDevices();
         }
       } catch (error) {
@@ -403,19 +405,11 @@
         
         if (response.ok) {
           const allDevices = await response.json();
-          console.log('Все устройства:', allDevices); // Для отладки
-          
-          // Фильтруем устройства только для текущей теплицы
           devices = allDevices.filter(device => device.greenhouse_id == currentGreenhouseId);
-          console.log('Устройства текущей теплицы:', devices); // Для отладки
-          
           updateDevicesUI();
-          
-          // Загружаем телеметрию для устройств
           await loadTelemetryData();
-          
-          // Проверяем наличие устройств разных типов
           checkDeviceTypes();
+          updateDeleteButtonState(); // <-- Обновляем состояние кнопки удаления
         } else {
           console.error('Ошибка загрузки устройств:', response.status);
         }
@@ -424,12 +418,10 @@
       }
     }
 
-    // Загрузка телеметрии для устройств
     async function loadTelemetryData() {
       const token = localStorage.getItem('access_token');
       telemetryData = {};
       
-      // Загружаем телеметрию для всех устройств теплицы
       for (const device of devices) {
         try {
           const response = await fetch(`http://127.0.0.1:8001/telemetry/${device.id}`, {
@@ -439,9 +431,6 @@
           if (response.ok) {
             const telemetry = await response.json();
             telemetryData[device.id] = telemetry;
-            console.log(`Телеметрия для устройства ${device.id}:`, telemetry); // Для отладки
-          } else {
-            console.log(`Нет телеметрии для устройства ${device.id}`);
           }
         } catch (error) {
           console.error(`Ошибка загрузки телеметрии для устройства ${device.id}:`, error);
@@ -453,37 +442,10 @@
       updateChartsUI();
     }
 
-    // Проверка типов устройств
     function checkDeviceTypes() {
-      console.log('Проверка типов устройств...'); // Для отладки
+      const telemetryDevices = devices.filter(device => device.metadata?.device_type === 'telemetry');
+      const actuatorDevices = devices.filter(device => device.metadata?.device_type === 'actuator');
       
-      // Проверяем метаданные каждого устройства
-      devices.forEach(device => {
-        console.log(`Устройство ${device.id}:`, {
-          name: device.name,
-          metadata: device.metadata,
-          device_type: device.metadata?.device_type
-        });
-      });
-      
-      // Определяем устройства телеметрии (тип "telemetry")
-      const telemetryDevices = devices.filter(device => {
-        const deviceType = device.metadata?.device_type;
-        console.log(`Проверка устройства ${device.id}: device_type = "${deviceType}"`);
-        return deviceType === 'telemetry';
-      });
-      
-      // Определяем устройства-приводы (тип "actuator")
-      const actuatorDevices = devices.filter(device => {
-        const deviceType = device.metadata?.device_type;
-        console.log(`Проверка устройства ${device.id}: device_type = "${deviceType}"`);
-        return deviceType === 'actuator';
-      });
-      
-      console.log('Устройства телеметрии:', telemetryDevices.length);
-      console.log('Устройства-приводы:', actuatorDevices.length);
-      
-      // Показываем/скрываем секции в зависимости от наличия устройств
       const telemetrySection = document.getElementById('telemetry-section');
       const actuatorSection = document.getElementById('actuator-section');
       const chartsSection = document.getElementById('charts-section');
@@ -503,7 +465,6 @@
       }
     }
 
-    // Обновление UI с данными теплицы
     function updateUIWithGreenhouseData(data) {
       document.getElementById('page-title').textContent = `${data.name} — Умная теплица`;
       document.getElementById('sidebar-greenhouse-name').textContent = data.name;
@@ -533,7 +494,6 @@
       document.getElementById('edit-location').value = data.location || '';
     }
 
-    // Обновление списка устройств
     function updateDevicesUI() {
       const devicesList = document.getElementById('devices-list');
       
@@ -554,12 +514,10 @@
       
       let html = '';
       devices.forEach(device => {
-        // Получаем тип устройства из метаданных API
         const deviceType = device.metadata?.device_type || 'unknown';
         const isActive = device.is_active ? 'online' : 'offline';
         const lastSeen = device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Никогда';
         
-        // Определяем иконку в зависимости от типа устройства
         let deviceIcon = 'fas fa-microchip';
         if (deviceType === 'telemetry') deviceIcon = 'fas fa-thermometer-half';
         if (deviceType === 'actuator') deviceIcon = 'fas fa-cogs';
@@ -592,14 +550,10 @@
       devicesList.innerHTML = html;
     }
 
-    // Обновление показателей телеметрии
     function updateTelemetryUI() {
       const telemetryContainer = document.getElementById('telemetry-container');
       
-      // Находим все устройства телеметрии
-      const telemetryDevices = devices.filter(device => 
-        device.metadata?.device_type === 'telemetry'
-      );
+      const telemetryDevices = devices.filter(device => device.metadata?.device_type === 'telemetry');
       
       if (telemetryDevices.length === 0) {
         telemetryContainer.innerHTML = `
@@ -613,14 +567,10 @@
       
       let telemetryHTML = '';
       
-      // Обрабатываем каждое устройство телеметрии
       for (const device of telemetryDevices) {
         const telemetry = telemetryData[device.id];
         
         if (telemetry && telemetry.telemetry) {
-          console.log(`Телеметрия для устройства ${device.id}:`, telemetry.telemetry); // Для отладки
-          
-          // Для каждого типа данных создаем карточку
           for (const [sensorType, samples] of Object.entries(telemetry.telemetry)) {
             if (samples && samples.length > 0) {
               const lastSample = samples[samples.length - 1];
@@ -639,7 +589,6 @@
             }
           }
         } else {
-          // Если нет данных телеметрии
           telemetryHTML += `
             <div class="telemetry-card">
               <div class="telemetry-value">--</div>
@@ -664,16 +613,10 @@
       telemetryContainer.innerHTML = telemetryHTML;
     }
 
-    // Обновление управления приводами
     function updateActuatorUI() {
       const actuatorContainer = document.getElementById('actuator-container');
       
-      // Находим все устройства-приводы
-      const actuatorDevices = devices.filter(device => 
-        device.metadata?.device_type === 'actuator'
-      );
-      
-      console.log('Устройства-приводы для управления:', actuatorDevices); // Для отладки
+      const actuatorDevices = devices.filter(device => device.metadata?.device_type === 'actuator');
       
       if (actuatorDevices.length === 0) {
         actuatorContainer.innerHTML = `
@@ -688,13 +631,9 @@
       let actuatorHTML = '';
       
       actuatorDevices.forEach(device => {
-        console.log(`Создание интерфейса для привода ${device.id}`); // Для отладки
-        
-        // Получаем текущее положение привода из телеметрии (если есть)
         let currentPosition = 'неизвестно';
         if (telemetryData[device.id] && telemetryData[device.id].telemetry) {
           const telemetry = telemetryData[device.id].telemetry;
-          console.log(`Телеметрия привода ${device.id}:`, telemetry); // Для отладки
           
           if (telemetry.position && telemetry.position.length > 0) {
             const lastPos = telemetry.position[telemetry.position.length - 1];
@@ -734,7 +673,6 @@
       actuatorContainer.innerHTML = actuatorHTML;
     }
 
-    // Обновление графиков
     function updateChartsUI() {
       const chartsContainer = document.getElementById('charts-container');
       
@@ -758,7 +696,6 @@
       `;
     }
 
-    // Вспомогательные функции для телеметрии
     function getSensorDisplayName(sensorType) {
       const names = {
         'temperature': 'Температура',
@@ -793,17 +730,12 @@
       return value;
     }
 
-    // Инициализация модальных окон
     function initModals() {
       const editModal = document.getElementById('edit-modal');
       const deleteModal = document.getElementById('delete-modal');
       
       document.getElementById('edit-greenhouse-btn').addEventListener('click', () => {
         editModal.style.display = 'flex';
-      });
-      
-      document.getElementById('delete-greenhouse-btn').addEventListener('click', () => {
-        deleteModal.style.display = 'flex';
       });
       
       document.getElementById('cancel-edit-btn').addEventListener('click', () => {
@@ -820,7 +752,6 @@
       });
     }
 
-    // Инициализация обработчиков событий
     function initEventHandlers() {
       document.getElementById('edit-greenhouse-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -832,6 +763,15 @@
       });
       
       document.getElementById('add-device-btn').addEventListener('click', goToAddDevice);
+      
+      // Обработчик кнопки "Удалить" с проверкой наличия устройств
+      document.getElementById('delete-greenhouse-btn').addEventListener('click', () => {
+        if (devices && devices.length > 0) {
+          alert('Прежде чем удалять теплицу, удалите все устройства.');
+          return;
+        }
+        document.getElementById('delete-modal').style.display = 'flex';
+      });
     }
 
     function goToAddDevice() {
@@ -944,10 +884,9 @@
       const token = localStorage.getItem('access_token');
       
       try {
-        // Здесь будет реальный вызов API для управления приводом
+        // Реальный вызов будет здесь
         alert(`Команда "${command}" отправлена на устройство ${deviceId} (демо-режим)`);
         
-        // В демо-режиме обновляем данные через 2 секунды
         setTimeout(async () => {
           await loadTelemetryData();
         }, 2000);
@@ -962,6 +901,17 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    function updateDeleteButtonState() {
+      const deleteBtn = document.getElementById('delete-greenhouse-btn');
+      if (devices.length > 0) {
+        deleteBtn.disabled = true;
+        deleteBtn.title = 'Невозможно удалить: есть привязанные устройства';
+      } else {
+        deleteBtn.disabled = false;
+        deleteBtn.title = '';
+      }
     }
   </script>
 </body>
