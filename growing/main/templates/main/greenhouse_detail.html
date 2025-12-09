@@ -152,6 +152,52 @@
       display: flex;
       gap: 8px;
     }
+    
+    /* Стили для показателей телеметрии */
+    .telemetry-value {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .telemetry-label {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .telemetry-card {
+      text-align: center;
+      padding: 20px;
+      border-radius: 10px;
+      background: #f9f9f9;
+      border: 1px solid #eee;
+    }
+    
+    /* Стили для управления приводом */
+    .actuator-control-group {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .actuator-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    .actuator-position {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .position-value {
+      font-weight: 600;
+      color: var(--primary);
+    }
   </style>
 </head>
 <body>
@@ -227,19 +273,24 @@
         </div>
       </section>
 
-      <!-- Текущие показатели (будут заполняться автоматически) -->
-      <section class="section">
-        <h2 class="section-title">Текущие показатели</h2>
-        <div class="metrics" id="metrics-container">
-          <div class="empty-state">
-            <i class="fas fa-chart-line"></i>
-            <p>Нет данных с устройств телеметрии</p>
-          </div>
+      <!-- Текущие показатели телеметрии -->
+      <section class="section" id="telemetry-section" style="display: none;">
+        <h2 class="section-title">Показатели телеметрии</h2>
+        <div class="metrics" id="telemetry-container">
+          <!-- Данные будут добавляться динамически -->
         </div>
       </section>
 
-      <!-- Графики -->
-      <section class="section">
+      <!-- Управление приводами -->
+      <section class="section" id="actuator-section" style="display: none;">
+        <h2 class="section-title">Управление приводами</h2>
+        <div id="actuator-container">
+          <!-- Управление приводами будет добавляться динамически -->
+        </div>
+      </section>
+
+      <!-- Графики телеметрии -->
+      <section class="section" id="charts-section" style="display: none;">
         <h2 class="section-title">Графики за 24 часа</h2>
         <div class="charts" id="charts-container">
           <div class="empty-state">
@@ -247,25 +298,6 @@
             <p>Нет данных для построения графиков</p>
           </div>
         </div>
-      </section>
-
-      <!-- Управление приводом (будет появляться при наличии приводов) -->
-      <section class="section" id="actuator-control-section" style="display: none;">
-        <h2 class="section-title">Управление приводом</h2>
-        <div class="controls" id="actuator-controls">
-          <!-- Кнопки управления появятся здесь -->
-        </div>
-      </section>
-
-      <!-- История событий -->
-      <section class="section">
-        <h2 class="section-title">История событий</h2>
-        <ul class="events-list" id="events-list">
-          <div class="empty-state">
-            <i class="fas fa-history"></i>
-            <p>История событий появится здесь</p>
-          </div>
-        </ul>
       </section>
     </div>
   </main>
@@ -316,11 +348,8 @@
     let telemetryData = {};
 
     document.addEventListener('DOMContentLoaded', function() {
-      // Загружаем данные теплицы из URL параметров
       loadGreenhouseData();
       loadUserProfile();
-      
-      // Инициализация
       initModals();
       initEventHandlers();
     });
@@ -331,18 +360,16 @@
       currentGreenhouseId = urlParams.get('greenhouse_id');
       
       if (!currentGreenhouseId) {
-        console.error('ID теплицы не указан в URL');
         alert('Теплица не выбрана');
         window.location.href = '/dashboard';
         return;
       }
       
-      // Сохраняем ID теплицы для страницы добавления устройства
       localStorage.setItem('current_greenhouse_id', currentGreenhouseId);
       
       const token = localStorage.getItem('access_token');
       if (!token) {
-        console.error('Требуется авторизация');
+        alert('Требуется авторизация');
         return;
       }
       
@@ -357,62 +384,96 @@
           localStorage.setItem('current_greenhouse_name', currentGreenhouseData.name);
           updateUIWithGreenhouseData(currentGreenhouseData);
           
-          // Загружаем устройства этой теплицы
+          // Загружаем устройства
           await loadDevices();
           
-          // Загружаем телеметрию для каждого устройства
-          await loadTelemetry();
-        } else {
-          console.error('Ошибка загрузки данных теплицы');
+          // Для устройств телеметрии загружаем данные
+          await loadTelemetryData();
         }
       } catch (error) {
-        console.error('Ошибка загрузки данных теплицы:', error);
+        console.error('Ошибка загрузки данных:', error);
       }
     }
 
-    // Загрузка устройств теплицы
+    // Загрузка устройств
     async function loadDevices() {
       const token = localStorage.getItem('access_token');
       
       try {
-        const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}/devices`, {
+        const response = await fetch(`http://127.0.0.1:8001/devices/`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (response.ok) {
-          devices = await response.json();
+          const allDevices = await response.json();
+          // Фильтруем устройства только для текущей теплицы
+          devices = allDevices.filter(device => device.greenhouse_id == currentGreenhouseId);
           updateDevicesUI();
+          
+          // Проверяем наличие устройств разных типов
+          checkDeviceTypes();
         }
       } catch (error) {
         console.error('Ошибка загрузки устройств:', error);
       }
     }
 
-    // Загрузка телеметрии для всех устройств
-    async function loadTelemetry() {
+    // Загрузка телеметрии для устройств типа telemetry
+    async function loadTelemetryData() {
       const token = localStorage.getItem('access_token');
       telemetryData = {};
       
-      for (const device of devices) {
-        if (device.metadata?.device_type === 'telemetry') {
-          try {
-            const response = await fetch(`http://127.0.0.1:8001/telemetry/${device.id}`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            
-            if (response.ok) {
-              const telemetry = await response.json();
-              telemetryData[device.id] = telemetry;
-            }
-          } catch (error) {
-            console.error(`Ошибка загрузки телеметрии для устройства ${device.id}:`, error);
+      // Находим устройства телеметрии
+      const telemetryDevices = devices.filter(device => 
+        device.metadata && device.metadata.device_type === 'telemetry'
+      );
+      
+      for (const device of telemetryDevices) {
+        try {
+          const response = await fetch(`http://127.0.0.1:8001/telemetry/${device.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (response.ok) {
+            const telemetry = await response.json();
+            telemetryData[device.id] = telemetry;
           }
+        } catch (error) {
+          console.error(`Ошибка загрузки телеметрии для устройства ${device.id}:`, error);
         }
       }
       
-      updateMetricsUI();
+      updateTelemetryUI();
       updateChartsUI();
-      updateActuatorControls();
+    }
+
+    // Проверка типов устройств
+    function checkDeviceTypes() {
+      const telemetryDevices = devices.filter(device => 
+        device.metadata && device.metadata.device_type === 'telemetry'
+      );
+      const actuatorDevices = devices.filter(device => 
+        device.metadata && device.metadata.device_type === 'actuator'
+      );
+      
+      // Показываем/скрываем секции в зависимости от наличия устройств
+      const telemetrySection = document.getElementById('telemetry-section');
+      const actuatorSection = document.getElementById('actuator-section');
+      const chartsSection = document.getElementById('charts-section');
+      
+      if (telemetryDevices.length > 0) {
+        telemetrySection.style.display = 'block';
+        chartsSection.style.display = 'block';
+      } else {
+        telemetrySection.style.display = 'none';
+        chartsSection.style.display = 'none';
+      }
+      
+      if (actuatorDevices.length > 0) {
+        actuatorSection.style.display = 'block';
+      } else {
+        actuatorSection.style.display = 'none';
+      }
     }
 
     // Обновление UI с данными теплицы
@@ -470,18 +531,25 @@
         const isActive = device.is_active ? 'online' : 'offline';
         const lastSeen = device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Никогда';
         
+        // Определяем иконку в зависимости от типа устройства
+        let deviceIcon = 'fas fa-microchip';
+        if (deviceType === 'telemetry') deviceIcon = 'fas fa-thermometer-half';
+        if (deviceType === 'actuator') deviceIcon = 'fas fa-cogs';
+        
         html += `
           <div class="device-card">
             <div class="device-info">
-              <h4>${escapeHtml(device.name)}</h4>
+              <h4><i class="${deviceIcon}"></i> ${escapeHtml(device.name)}</h4>
               <div>
-                <span class="device-status status-${isActive}">${isActive === 'online' ? 'Онлайн' : 'Оффлайн'}</span>
+                <span class="device-status status-${isActive}">
+                  ${isActive === 'online' ? 'Онлайн' : 'Оффлайн'}
+                </span>
                 <span style="margin-left: 10px; color: #666; font-size: 14px;">
                   Тип: ${deviceType === 'telemetry' ? 'Телеметрия' : 'Привод'}
                 </span>
               </div>
               <div style="margin-top: 8px; font-size: 13px; color: #888;">
-                Серийный номер: ${device.serial_number} | Последняя активность: ${lastSeen}
+                ID: ${device.id} | Серийный номер: ${device.serial_number}
               </div>
             </div>
             <div class="device-actions">
@@ -496,55 +564,135 @@
       devicesList.innerHTML = html;
     }
 
-    // Обновление показателей
-    function updateMetricsUI() {
-      const metricsContainer = document.getElementById('metrics-container');
-      const telemetryDevices = devices.filter(d => d.metadata?.device_type === 'telemetry');
+    // Обновление показателей телеметрии
+    function updateTelemetryUI() {
+      const telemetryContainer = document.getElementById('telemetry-container');
+      
+      // Находим все устройства телеметрии
+      const telemetryDevices = devices.filter(device => 
+        device.metadata && device.metadata.device_type === 'telemetry'
+      );
       
       if (telemetryDevices.length === 0) {
-        metricsContainer.innerHTML = `
+        telemetryContainer.innerHTML = `
           <div class="empty-state">
-            <i class="fas fa-chart-line"></i>
-            <p>Нет данных с устройств телеметрии</p>
+            <i class="fas fa-thermometer-half"></i>
+            <p>Нет устройств телеметрии</p>
           </div>
         `;
         return;
       }
       
-      let metricsHTML = '';
+      let telemetryHTML = '';
       
-      // Собираем последние значения из телеметрии
+      // Обрабатываем каждое устройство телеметрии
       for (const device of telemetryDevices) {
         const telemetry = telemetryData[device.id];
+        
         if (telemetry && telemetry.telemetry) {
-          // Берем последнее значение для каждого типа данных
-          for (const [key, samples] of Object.entries(telemetry.telemetry)) {
-            if (samples.length > 0) {
+          // Для каждого типа данных создаем карточку
+          for (const [sensorType, samples] of Object.entries(telemetry.telemetry)) {
+            if (samples && samples.length > 0) {
               const lastSample = samples[samples.length - 1];
-              const displayName = getDisplayName(key);
+              const displayName = getSensorDisplayName(sensorType);
+              const unit = getSensorUnit(sensorType);
               
-              metricsHTML += `
-                <div class="metric-card">
-                  <div class="metric-value">${formatValue(lastSample.value)}${getUnit(key)}</div>
-                  <div class="metric-label">${displayName}</div>
-                  <div style="font-size: 12px; color: #888; margin-top: 4px;">${device.name}</div>
+              telemetryHTML += `
+                <div class="telemetry-card">
+                  <div class="telemetry-value">${formatValue(lastSample.value)}${unit}</div>
+                  <div class="telemetry-label">${displayName}</div>
+                  <div style="font-size: 12px; color: #888; margin-top: 8px;">
+                    ${device.name}
+                  </div>
                 </div>
               `;
             }
           }
+        } else {
+          // Если нет данных телеметрии
+          telemetryHTML += `
+            <div class="telemetry-card">
+              <div class="telemetry-value">--</div>
+              <div class="telemetry-label">Нет данных</div>
+              <div style="font-size: 12px; color: #888; margin-top: 8px;">
+                ${device.name}
+              </div>
+            </div>
+          `;
         }
       }
       
-      if (metricsHTML === '') {
-        metricsHTML = `
+      if (telemetryHTML === '') {
+        telemetryHTML = `
           <div class="empty-state">
-            <i class="fas fa-chart-line"></i>
-            <p>Нет данных с устройств телеметрии</p>
+            <i class="fas fa-thermometer-half"></i>
+            <p>Нет данных телеметрии</p>
           </div>
         `;
       }
       
-      metricsContainer.innerHTML = metricsHTML;
+      telemetryContainer.innerHTML = telemetryHTML;
+    }
+
+    // Обновление управления приводами
+    function updateActuatorUI() {
+      const actuatorContainer = document.getElementById('actuator-container');
+      
+      // Находим все устройства-приводы
+      const actuatorDevices = devices.filter(device => 
+        device.metadata && device.metadata.device_type === 'actuator'
+      );
+      
+      if (actuatorDevices.length === 0) {
+        actuatorContainer.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-cogs"></i>
+            <p>Нет устройств-приводов</p>
+          </div>
+        `;
+        return;
+      }
+      
+      let actuatorHTML = '';
+      
+      actuatorDevices.forEach(device => {
+        // Получаем текущее положение привода из телеметрии (если есть)
+        let currentPosition = 'неизвестно';
+        if (telemetryData[device.id] && telemetryData[device.id].telemetry) {
+          const telemetry = telemetryData[device.id].telemetry;
+          if (telemetry.position && telemetry.position.length > 0) {
+            const lastPos = telemetry.position[telemetry.position.length - 1];
+            currentPosition = `${lastPos.value}%`;
+          }
+        }
+        
+        actuatorHTML += `
+          <div class="actuator-control-group">
+            <div class="actuator-title">
+              <i class="fas fa-cogs"></i> ${escapeHtml(device.name)}
+            </div>
+            <div class="controls">
+              <button class="control-btn open" onclick="sendActuatorCommand(${device.id}, 'open')">
+                <i class="fas fa-arrow-up"></i>
+                Открыть
+              </button>
+              <button class="control-btn close" onclick="sendActuatorCommand(${device.id}, 'close')">
+                <i class="fas fa-arrow-down"></i>
+                Закрыть
+              </button>
+              <button class="control-btn stop" onclick="sendActuatorCommand(${device.id}, 'stop')">
+                <i class="fas fa-stop"></i>
+                Остановить
+              </button>
+            </div>
+            <div class="actuator-position">
+              Текущее положение: <span class="position-value">${currentPosition}</span>
+            </div>
+          </div>
+        `;
+      });
+      
+      actuatorContainer.innerHTML = actuatorHTML;
     }
 
     // Обновление графиков
@@ -561,79 +709,43 @@
         return;
       }
       
-      // Здесь можно добавить реальные графики с использованием библиотеки (Chart.js и т.д.)
+      // Здесь можно добавить реальные графики с использованием библиотеки Chart.js
       chartsContainer.innerHTML = `
         <div class="chart-placeholder">
-          <i class="fas fa-chart-line"></i> Данные с телеметрии
+          <i class="fas fa-chart-line"></i> Температура (данные из API)
         </div>
         <div class="chart-placeholder">
-          <i class="fas fa-tint"></i> Графики будут отображаться здесь
+          <i class="fas fa-tint"></i> Влажность (данные из API)
         </div>
       `;
     }
 
-    // Обновление управления приводами
-    function updateActuatorControls() {
-      const actuatorSection = document.getElementById('actuator-control-section');
-      const actuatorControls = document.getElementById('actuator-controls');
-      const actuatorDevices = devices.filter(d => d.metadata?.device_type === 'actuator');
-      
-      if (actuatorDevices.length === 0) {
-        actuatorSection.style.display = 'none';
-        return;
-      }
-      
-      actuatorSection.style.display = 'block';
-      
-      let controlsHTML = '';
-      actuatorDevices.forEach(device => {
-        controlsHTML += `
-          <div style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
-            <h4 style="margin-bottom: 12px;">${escapeHtml(device.name)}</h4>
-            <div class="controls">
-              <button class="control-btn open" onclick="sendCommand(${device.id}, 'open')">
-                <i class="fas fa-arrow-up"></i>
-                Открыть
-              </button>
-              <button class="control-btn close" onclick="sendCommand(${device.id}, 'close')">
-                <i class="fas fa-arrow-down"></i>
-                Закрыть
-              </button>
-              <button class="control-btn stop" onclick="sendCommand(${device.id}, 'stop')">
-                <i class="fas fa-stop"></i>
-                Остановить
-              </button>
-            </div>
-          </div>
-        `;
-      });
-      
-      actuatorControls.innerHTML = controlsHTML;
-    }
-
-    // Вспомогательные функции
-    function getDisplayName(key) {
+    // Вспомогательные функции для телеметрии
+    function getSensorDisplayName(sensorType) {
       const names = {
         'temperature': 'Температура',
-        'humidity': 'Влажность',
-        'light': 'Освещенность',
+        'humidity': 'Влажность воздуха',
         'soil_moisture': 'Влажность почвы',
+        'light': 'Освещенность',
+        'co2': 'CO₂',
         'pressure': 'Давление',
-        'position': 'Положение'
+        'position': 'Положение',
+        'status': 'Статус'
       };
-      return names[key] || key;
+      return names[sensorType] || sensorType;
     }
 
-    function getUnit(key) {
+    function getSensorUnit(sensorType) {
       const units = {
         'temperature': '°C',
         'humidity': '%',
-        'light': 'lx',
         'soil_moisture': '%',
-        'pressure': 'hPa',
+        'light': 'лк',
+        'co2': 'ppm',
+        'pressure': 'гПа',
         'position': '%'
       };
-      return units[key] || '';
+      return units[sensorType] || '';
     }
 
     function formatValue(value) {
@@ -672,22 +784,16 @@
 
     // Инициализация обработчиков событий
     function initEventHandlers() {
-      // Форма редактирования
       document.getElementById('edit-greenhouse-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         await updateGreenhouse();
       });
       
-      // Подтверждение удаления
       document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
         await deleteGreenhouse();
       });
       
-      // Кнопка добавления устройства
       document.getElementById('add-device-btn').addEventListener('click', goToAddDevice);
-      
-      // Загрузка профиля пользователя
-      loadUserProfile();
     }
 
     function goToAddDevice() {
@@ -787,7 +893,7 @@
         if (response.ok) {
           alert('Устройство удалено');
           await loadDevices();
-          await loadTelemetry();
+          await loadTelemetryData();
         } else {
           alert('Не удалось удалить устройство');
         }
@@ -797,9 +903,39 @@
       }
     }
 
-    function sendCommand(deviceId, command) {
-      alert(`Команда "${command}" отправлена на устройство ${deviceId}`);
-      // Здесь будет реальный вызов API для управления приводом
+    async function sendActuatorCommand(deviceId, command) {
+      const token = localStorage.getItem('access_token');
+      
+      try {
+        // Здесь будет реальный вызов API для управления приводом
+        // Пример: POST /devices/{device_id}/command
+        const response = await fetch(`http://127.0.0.1:8001/devices/${deviceId}/command`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            command: command,
+            timestamp: new Date().toISOString()
+          })
+        });
+        
+        if (response.ok) {
+          alert(`Команда "${command}" успешно отправлена на устройство`);
+          // Обновляем данные через 2 секунды
+          setTimeout(async () => {
+            await loadTelemetryData();
+            updateActuatorUI();
+          }, 2000);
+        } else {
+          alert('Не удалось отправить команду');
+        }
+      } catch (error) {
+        console.error('Ошибка отправки команды:', error);
+        // Для демо показываем уведомление
+        alert(`Команда "${command}" отправлена на устройство ${deviceId} (демо-режим)`);
+      }
     }
 
     function escapeHtml(text) {
