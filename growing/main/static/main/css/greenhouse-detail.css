@@ -445,3 +445,25 @@ body {
   background: #f8d7da !important;
   color: #721c24 !important;
 }
+/* В greenhouse-detail.css должно быть: */
+.main {
+  margin-left: 250px; /* если sidebar фиксированный */
+  padding: 20px;
+}
+
+.sidebar {
+  width: 250px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #2c3e50;
+  color: white;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Если этих классов нет, добавьте их в <style> */
