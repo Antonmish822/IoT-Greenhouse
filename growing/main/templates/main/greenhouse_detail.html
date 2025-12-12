@@ -1103,14 +1103,16 @@
       }
     }
 
-    // Обновление UI данными теплицы
+    // Обновление UI с данными теплицы
     function updateUIWithGreenhouseData(data) {
+      // Обновляем название на всех элементах
       document.getElementById('page-title').textContent = `${data.name} — Умная теплица`;
       document.getElementById('sidebar-greenhouse-name').textContent = data.name;
+      document.getElementById('breadcrumb-greenhouse-name').textContent = data.name;
       document.getElementById('greenhouse-name').textContent = data.name;
       document.getElementById('delete-greenhouse-name').textContent = data.name;
-      document.getElementById('breadcrumb-greenhouse-name').textContent = data.name;
       
+      // Обновляем местоположение
       const locationElement = document.getElementById('greenhouse-location');
       const deleteLocationElement = document.getElementById('delete-location-info');
       
@@ -1118,21 +1120,25 @@
         locationElement.textContent = data.location;
         deleteLocationElement.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(data.location)}`;
         document.getElementById('location-info').style.display = 'flex';
+      } else {
+        locationElement.textContent = 'Местоположение не указано';
+        deleteLocationElement.textContent = 'Местоположение не указано';
+        document.getElementById('location-info').style.display = 'flex';
       }
       
+      // Обновляем статус
       const statusElement = document.getElementById('greenhouse-status');
       if (data.is_active) {
         statusElement.textContent = 'Онлайн';
-        statusElement.className = 'status online';
+        statusElement.className = 'status-badge';
       } else {
         statusElement.textContent = 'Оффлайн';
-        statusElement.className = 'status offline';
+        statusElement.className = 'status-badge offline';
       }
       
-      if (document.getElementById('edit-name')) {
-        document.getElementById('edit-name').value = data.name;
-        document.getElementById('edit-location').value = data.location || '';
-      }
+      // Заполняем форму редактирования
+      document.getElementById('edit-name').value = data.name;
+      document.getElementById('edit-location').value = data.location || '';
     }
 
     // Обновление списка устройств
@@ -1497,43 +1503,98 @@
     }
 
     // Обновление теплицы
-    async function updateGreenhouse() {
-      const name = document.getElementById('edit-name').value.trim();
-      const location = document.getElementById('edit-location').value.trim();
+    // Обновление теплицы через API
+async function updateGreenhouse() {
+  const name = document.getElementById('edit-name').value.trim();
+  const location = document.getElementById('edit-location').value.trim();
+  
+  if (!name) {
+      alert('Название теплицы обязательно для заполнения');
+      return;
+  }
+  
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+      alert('Требуется авторизация');
+      return;
+  }
+  
+  // Подготовка данных для отправки
+  const updateData = {
+      name: name,
+      location: location || null
+  };
+  
+  try {
+      const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
+          method: 'PUT',
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+      });
       
-      if (!name) {
-        alert('Название теплицы обязательно для заполнения');
-        return;
+      if (response.ok) {
+          // Обновляем локальные данные теплицы из ответа API
+          const updatedGreenhouse = await response.json();
+          currentGreenhouseData = updatedGreenhouse;
+          
+          // Обновляем UI с новыми данными
+          updateUIWithGreenhouseData(updatedGreenhouse);
+          
+          // Закрываем модальное окно
+          document.getElementById('edit-modal').style.display = 'none';
+          
+          alert('Теплица успешно обновлена');
+      } else if (response.status === 404) {
+          alert('Теплица не найдена');
+      } else if (response.status === 400) {
+          const errorData = await response.json();
+          alert(`Ошибка обновления: ${errorData.detail || 'Неверные данные'}`);
+      } else if (response.status === 401) {
+          alert('Требуется авторизация');
+      } else {
+          alert('Ошибка обновления теплицы');
       }
-      
-      // Сохраняем в localStorage, так как API теплиц может не быть
-      localStorage.setItem('current_greenhouse_name', name);
-      if (location) {
-        localStorage.setItem('current_greenhouse_location', location);
-      }
-      
-      const updatedData = {
-        ...currentGreenhouseData,
-        name: name,
-        location: location || null
-      };
-      
-      currentGreenhouseData = updatedData;
-      updateUIWithGreenhouseData(updatedData);
-      document.getElementById('edit-modal').style.display = 'none';
-      alert('Теплица успешно обновлена');
-    }
+  } catch (error) {
+      console.error('Ошибка обновления теплицы:', error);
+      alert('Ошибка подключения к серверу');
+  }
+}
 
     // Удаление теплицы
-    async function deleteGreenhouse() {
-      // Удаляем из localStorage
-      localStorage.removeItem('current_greenhouse_name');
-      localStorage.removeItem('current_greenhouse_location');
-      localStorage.removeItem('current_greenhouse_id');
+async function deleteGreenhouse() {
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+      alert('Требуется авторизация');
+      return;
+  }
+  
+  try {
+      const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
+          method: 'DELETE',
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+          }
+      });
       
-      alert('Теплица успешно удалена');
-      window.location.href = '/dashboard';
-    }
+      if (response.ok || response.status === 204) {
+          alert('Теплица успешно удалена');
+          window.location.href = '/dashboard';
+      } else if (response.status === 404) {
+          alert('Теплица не найдена');
+      } else if (response.status === 401) {
+          alert('Требуется авторизация');
+      } else {
+          alert('Ошибка удаления теплицы');
+      }
+  } catch (error) {
+      console.error('Ошибка удаления теплицы:', error);
+      alert('Ошибка подключения к серверу');
+  }
+}
 
     // Удаление устройства
     async function removeDevice(deviceId) {
