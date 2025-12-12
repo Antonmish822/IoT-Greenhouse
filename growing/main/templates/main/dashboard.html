@@ -299,7 +299,7 @@
       }
     }
     
-    /* Action bar - удаляем так как кнопка в header */
+    /* Action bar */
     .action-bar {
       display: flex;
       justify-content: space-between;
@@ -311,44 +311,6 @@
       font-size: 20px;
       font-weight: 600;
       color: #333;
-    }
-    
-    /* Обновляем header для размещения кнопки */
-    .header {
-      padding: 20px 30px;
-      background: var(--light);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-    
-    .page-title {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      flex: 1;
-    }
-    
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    
-    @media (max-width: 768px) {
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-      }
-      
-      .header-actions {
-        width: 100%;
-        justify-content: space-between;
-      }
     }
   </style>
 </head>
@@ -380,24 +342,20 @@
   <!-- Основной контент -->
   <main class="main">
     <header class="header">
-      <div class="page-title">
-        <h1>Панель управления</h1>
-      </div>
-      <div class="header-actions">
-        <button class="btn" id="add-greenhouse-btn">
-          <i class="fas fa-plus"></i>
-          Добавить теплицу
-        </button>
-        <div class="user-info">
-          <div class="user-avatar" id="user-avatar">З</div>
-          <span id="user-name">Загрузка...</span>
-        </div>
+      <h1 class="page-title">Панель управления</h1>
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">З</div>
+        <span id="user-name">Загрузка...</span>
       </div>
     </header>
 
     <div class="content">
       <div class="action-bar">
         <h2 class="page-subtitle">Мои теплицы</h2>
+        <button class="btn" id="add-greenhouse-btn">
+          <i class="fas fa-plus"></i>
+          Добавить теплицу
+        </button>
       </div>
 
       <div id="greenhouses-container">
@@ -439,7 +397,6 @@
   <script>
     // Глобальная переменная для хранения теплиц
     let currentGreenhouses = [];
-    let greenhouseTelemetryCache = {}; // Кэш телеметрии для теплиц
     
     document.addEventListener('DOMContentLoaded', function() {
         // Загружаем профиль пользователя
@@ -802,8 +759,6 @@
                 currentGreenhouses = greenhouses.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                 
                 if (currentGreenhouses.length > 0) {
-                    // Загружаем телеметрию для всех теплиц
-                    await loadTelemetryForAllGreenhouses();
                     updateGreenhousesDisplay();
                 } else {
                     showEmptyState('У вас еще нет теплиц');
@@ -819,128 +774,6 @@
             console.error('❌ Ошибка загрузки теплиц:', error);
             showEmptyState('Ошибка подключения к серверу');
         }
-    }
-
-    // Загрузка телеметрии для всех теплиц
-    async function loadTelemetryForAllGreenhouses() {
-      const token = localStorage.getItem('access_token');
-      if (!token) return;
-      
-      greenhouseTelemetryCache = {};
-      
-      // Загружаем телеметрию для каждой теплицы параллельно
-      const telemetryPromises = currentGreenhouses.map(async (greenhouse) => {
-        try {
-          // Сначала получаем устройства для этой теплицы
-          const devicesResponse = await fetch('http://127.0.0.1:8001/devices/', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          if (devicesResponse.ok) {
-            const allDevices = await devicesResponse.json();
-            
-            // Фильтруем устройства по greenhouse_id
-            const greenhouseDevices = allDevices.filter(device => {
-              if (device.greenhouse_id && device.greenhouse_id == greenhouse.id) {
-                return true;
-              }
-              if (device.device_metadata && device.device_metadata.greenhouse_id == greenhouse.id) {
-                return true;
-              }
-              return false;
-            });
-            
-            // Ищем датчики температуры и влажности
-            const tempSensors = greenhouseDevices.filter(device => {
-              const metadata = device.device_metadata || {};
-              return metadata.sensor_type === 'temperature' || 
-                     metadata.device_type === 'telemetry' || 
-                     metadata.device_type === 'sensor';
-            });
-            
-            const humiditySensors = greenhouseDevices.filter(device => {
-              const metadata = device.device_metadata || {};
-              return metadata.sensor_type === 'humidity' || 
-                     metadata.device_type === 'telemetry' || 
-                     metadata.device_type === 'sensor';
-            });
-            
-            // Получаем последние показания
-            let temperature = null;
-            let humidity = null;
-            
-            // Пытаемся получить температуру
-            for (const sensor of tempSensors) {
-              try {
-                const telemetryResponse = await fetch(`http://127.0.0.1:8001/telemetry/${sensor.id}`, {
-                  headers: {
-                    'Authorization': `Bearer ${token}`
-                  }
-                });
-                
-                if (telemetryResponse.ok) {
-                  const telemetryData = await telemetryResponse.json();
-                  if (telemetryData.telemetry && telemetryData.telemetry.temperature) {
-                    const temps = telemetryData.telemetry.temperature;
-                    if (temps.length > 0) {
-                      temperature = temps[temps.length - 1].value;
-                      break;
-                    }
-                  }
-                }
-              } catch (error) {
-                console.error(`Ошибка загрузки телеметрии для устройства ${sensor.id}:`, error);
-              }
-            }
-            
-            // Пытаемся получить влажность
-            for (const sensor of humiditySensors) {
-              try {
-                const telemetryResponse = await fetch(`http://127.0.0.1:8001/telemetry/${sensor.id}`, {
-                  headers: {
-                    'Authorization': `Bearer ${token}`
-                  }
-                });
-                
-                if (telemetryResponse.ok) {
-                  const telemetryData = await telemetryResponse.json();
-                  if (telemetryData.telemetry && telemetryData.telemetry.humidity) {
-                    const hums = telemetryData.telemetry.humidity;
-                    if (hums.length > 0) {
-                      humidity = hums[hums.length - 1].value;
-                      break;
-                    }
-                  }
-                }
-              } catch (error) {
-                console.error(`Ошибка загрузки телеметрии для устройства ${sensor.id}:`, error);
-              }
-            }
-            
-            // Сохраняем в кэш
-            greenhouseTelemetryCache[greenhouse.id] = {
-              temperature: temperature,
-              humidity: humidity,
-              hasDevices: greenhouseDevices.length > 0,
-              lastUpdated: new Date().toISOString()
-            };
-          }
-        } catch (error) {
-          console.error(`Ошибка загрузки данных для теплицы ${greenhouse.id}:`, error);
-          // Создаем запись с демо-данными в случае ошибки
-          greenhouseTelemetryCache[greenhouse.id] = {
-            temperature: greenhouse.is_active !== false ? (22 + Math.random() * 6).toFixed(1) : null,
-            humidity: greenhouse.is_active !== false ? (65 + Math.random() * 15).toFixed(0) : null,
-            hasDevices: false,
-            isDemo: true
-          };
-        }
-      });
-      
-      // Ждем завершения всех запросов
-      await Promise.all(telemetryPromises);
     }
 
     // Обновление отображения теплиц
@@ -977,29 +810,12 @@
         card.style.textDecoration = 'none';
         card.style.color = 'inherit';
         
-        // Получаем телеметрию из кэша
-        const telemetryData = greenhouseTelemetryCache[greenhouse.id] || {};
+        // Генерируем случайные показатели для демонстрации
         const isOnline = greenhouse.is_active !== false;
-        
-        // Используем данные из API или демо-данные
-        let temperature = '—';
-        let humidity = '—';
-        
-        if (telemetryData.temperature !== null && telemetryData.temperature !== undefined) {
-            temperature = telemetryData.temperature.toFixed(1);
-        } else if (isOnline) {
-            temperature = (22 + Math.random() * 6).toFixed(1);
-        }
-        
-        if (telemetryData.humidity !== null && telemetryData.humidity !== undefined) {
-            humidity = telemetryData.humidity.toFixed(0);
-        } else if (isOnline) {
-            humidity = (65 + Math.random() * 15).toFixed(0);
-        }
-        
-        const hasRealData = telemetryData.temperature !== null || telemetryData.humidity !== null;
-        const actuatorStatus = hasRealData ? 'Данные с датчиков' : 'Нет данных';
-        const actuatorIcon = hasRealData ? 'fa-thermometer-half' : 'fa-exclamation-triangle';
+        const temperature = isOnline ? (22 + Math.random() * 6).toFixed(1) : '—';
+        const humidity = isOnline ? (65 + Math.random() * 15).toFixed(0) : '—';
+        const actuatorStatus = isOnline ? 'Открыто (100%)' : 'Нет данных';
+        const actuatorIcon = isOnline ? 'fa-window-maximize' : 'fa-exclamation-triangle';
         
         // Выбираем иконку в зависимости от статуса
         const greenhouseIcon = isOnline ? 'fa-leaf' : 'fa-leaf';
@@ -1025,11 +841,11 @@
             </div>
             <div class="metrics">
                 <div class="metric">
-                    <div class="metric-value">${temperature}${temperature !== '—' ? '°C' : ''}</div>
+                    <div class="metric-value">${temperature}${isOnline ? '°C' : ''}</div>
                     <div class="metric-label">Температура</div>
                 </div>
                 <div class="metric">
-                    <div class="metric-value">${humidity}${humidity !== '—' ? '%' : ''}</div>
+                    <div class="metric-value">${humidity}${isOnline ? '%' : ''}</div>
                     <div class="metric-label">Влажность</div>
                 </div>
             </div>
@@ -1077,10 +893,10 @@
         loadGreenhouses();
     };
     
-    // Автоматическое обновление каждые 2 минуты
+    // Автоматическое обновление каждые 30 секунд
     setInterval(() => {
         loadGreenhouses();
-    }, 120000);
+    }, 1200000);
   </script>
 </body>
 </html>
