@@ -898,90 +898,7 @@
         loadGreenhouses();
     }, 1200000);
   </script>
-  <script>// Загрузка показателей для конкретной теплицы
-    async function loadGreenhouseMetrics(greenhouseId) {
-        const token = localStorage.getItem('access_token');
-        if (!token) return null;
-        
-        try {
-            // 1. Получаем устройства для теплицы
-            const devicesResponse = await fetch(`http://127.0.0.1:8001/greenhouses/${greenhouseId}/devices`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (!devicesResponse.ok) {
-                console.error(`Ошибка загрузки устройств для теплицы ${greenhouseId}:`, devicesResponse.status);
-                return null;
-            }
-            
-            const devices = await devicesResponse.json();
-            
-            let temperature = null;
-            let humidity = null;
-            
-            // 2. Для каждого устройства получаем телеметрию
-            for (const device of devices) {
-                try {
-                    const telemetryResponse = await fetch(`http://127.0.0.1:8001/telemetry/${device.id}`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    
-                    if (telemetryResponse.ok) {
-                        const telemetryData = await telemetryResponse.json();
-                        
-                        // 3. Анализируем телеметрию для поиска температуры и влажности
-                        if (telemetryData.telemetry) {
-                            // Ищем температуру и влажность в данных телеметрии
-                            const telemetry = telemetryData.telemetry;
-                            
-                            // Проверяем различные возможные ключи для температуры
-                            const tempKeys = ['temperature', 'temp', 'Temperature', 'Temp'];
-                            const humKeys = ['humidity', 'hum', 'Humidity', 'Hum'];
-                            
-                            for (const key of tempKeys) {
-                                if (telemetry[key] && telemetry[key].length > 0) {
-                                    // Берем последнее значение
-                                    const lastSample = telemetry[key][telemetry[key].length - 1];
-                                    temperature = lastSample.value;
-                                    break;
-                                }
-                            }
-                            
-                            for (const key of humKeys) {
-                                if (telemetry[key] && telemetry[key].length > 0) {
-                                    // Берем последнее значение
-                                    const lastSample = telemetry[key][telemetry[key].length - 1];
-                                    humidity = lastSample.value;
-                                    break;
-                                }
-                            }
-                            
-                            // Если нашли оба значения, прекращаем поиск
-                            if (temperature !== null && humidity !== null) {
-                                break;
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error(`Ошибка загрузки телеметрии для устройства ${device.id}:`, error);
-                    continue; // Продолжаем с другим устройством
-                }
-            }
-            
-            return { temperature, humidity };
-            
-        } catch (error) {
-            console.error(`❌ Ошибка загрузки показателей для теплицы ${greenhouseId}:`, error);
-        }
-        
-        return null;
-    }
-    
-    // Оптимизированная версия с кэшированием данных
+  <script>// Оптимизированная версия с кэшированием данных
     let metricsCache = {};
     const CACHE_DURATION = 60000; // 1 минута
     
@@ -1006,6 +923,11 @@
             
             if (!devicesResponse.ok) {
                 console.error(`Ошибка загрузки устройств для теплицы ${greenhouseId}:`, devicesResponse.status);
+                // Возвращаем null, чтобы отобразить "—"
+                metricsCache[greenhouseId] = {
+                    data: null,
+                    timestamp: now
+                };
                 return null;
             }
             
@@ -1104,7 +1026,7 @@
         card.style.textDecoration = 'none';
         card.style.color = 'inherit';
         
-        // Получаем реальные показатели из API (используем оптимизированную версию)
+        // Получаем реальные показатели из API
         const metrics = await loadGreenhouseMetricsOptimized(greenhouse.id);
         
         const isOnline = greenhouse.is_active !== false;
@@ -1113,28 +1035,25 @@
         let temperatureDisplay = '—';
         let humidityDisplay = '—';
         
-        if (isOnline && metrics) {
-            if (metrics.temperature !== null) {
+        if (isOnline) {
+            // Только если есть реальные данные из API, показываем их
+            if (metrics && metrics.temperature !== null) {
                 temperatureDisplay = typeof metrics.temperature === 'number' ? 
                     metrics.temperature.toFixed(1) : 
                     parseFloat(metrics.temperature).toFixed(1);
             }
+            // Если данных нет - остаётся "—"
             
-            if (metrics.humidity !== null) {
+            if (metrics && metrics.humidity !== null) {
                 humidityDisplay = typeof metrics.humidity === 'number' ? 
                     Math.round(metrics.humidity) : 
                     Math.round(parseFloat(metrics.humidity));
             }
+            // Если данных нет - остаётся "—"
         }
         
-        // Используем демо-данные если нет реальных
-        if (isOnline && temperatureDisplay === '—') {
-            temperatureDisplay = (22 + Math.random() * 6).toFixed(1);
-        }
-        
-        if (isOnline && humidityDisplay === '—') {
-            humidityDisplay = (65 + Math.random() * 15).toFixed(0);
-        }
+        // УДАЛЕНО: демо-данные больше не используются
+        // Только реальные данные из API или "—"
         
         const actuatorStatus = isOnline ? 'Открыто (100%)' : 'Нет данных';
         const actuatorIcon = isOnline ? 'fa-window-maximize' : 'fa-exclamation-triangle';
