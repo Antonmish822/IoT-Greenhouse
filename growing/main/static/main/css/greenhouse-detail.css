@@ -452,3 +452,17 @@ body {
 }
 
 /* Если этих классов нет, добавьте их в <style> */
+/* Плавная анимация для сайдбара */
+.sidebar {
+    transition: transform 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .sidebar.collapsed {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.expanded {
+        transform: translateX(0);
+    }
+}
