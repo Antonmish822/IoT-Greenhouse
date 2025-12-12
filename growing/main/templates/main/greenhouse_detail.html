@@ -687,6 +687,244 @@
         align-self: flex-end;
       }
     }
+    /* Боковое меню - фиксированное */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+}
+
+/* Основной контент - сдвинутый вправо */
+.main {
+    flex: 1;
+    margin-left: 240px; /* Ширина сайдбара */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Шапка - растянутая на всю ширину основного контента */
+/* ===== ОБНОВЛЕННАЯ ШАПКА ===== */
+
+.header {
+    padding: 20px 30px;
+    background: var(--light);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: auto;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.breadcrumb {
+    color: #666;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    order: 1;
+    flex: 1;
+}
+
+.breadcrumb a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.breadcrumb span {
+    margin: 0 8px;
+    color: #999;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    order: 2;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    order: 3;
+    margin-left: auto;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#user-name {
+    font-weight: 500;
+    color: var(--dark);
+}
+
+.greenhouse-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Кнопки действий теплицы */
+.greenhouse-actions .btn {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* Заголовок страницы */
+.page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--dark);
+    margin: 0;
+    padding: 0 30px;
+    order: 4;
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Адаптивность для шапки */
+@media (max-width: 1024px) {
+    .header {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .breadcrumb {
+        order: 1;
+        width: 100%;
+    }
+    
+    .header-actions {
+        order: 2;
+        justify-content: space-between;
+        width: 100%;
+    }
+    
+    .greenhouse-actions {
+        order: 1;
+    }
+    
+    .user-info {
+        order: 2;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 15px 20px;
+    }
+    
+    .page-title {
+        padding: 0 20px;
+        font-size: 20px;
+        margin-top: 15px;
+    }
+    
+    .breadcrumb {
+        font-size: 13px;
+    }
+    
+    .greenhouse-actions {
+        flex-wrap: wrap;
+    }
+    
+    .greenhouse-actions .btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .greenhouse-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .user-info {
+        align-self: flex-end;
+        margin-left: 0;
+    }
+}
+
+/* Стили для кнопок, соответствующие dashboard */
+.btn {
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    text-decoration: none;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-danger {
+    background: #dc3545;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn i {
+    font-size: 14px;
+}
+
   </style>
 </head>
 <body>
@@ -708,33 +946,35 @@
 
   <!-- Основной контент -->
   <main class="main">
-    <header class="header">
-      <div class="breadcrumb">
+<header class="header">
+    <div class="breadcrumb">
         <a href="/dashboard">Панель управления</a>
         <span>/</span>
         <span id="breadcrumb-greenhouse-name">Теплица на даче</span>
-      </div>
-      <div class="header-actions">
-        <button class="btn" id="add-device-btn">
-          <i class="fas fa-plus"></i>
-          Добавить устройство
-        </button>
+    </div>
+    
+    <div class="header-actions">
         <div class="greenhouse-actions">
-          <button class="btn btn-secondary" id="edit-greenhouse-btn">
-            <i class="fas fa-edit"></i>
-            Изменить
-          </button>
-          <button class="btn btn-danger" id="delete-greenhouse-btn">
-            <i class="fas fa-trash"></i>
-            Удалить
-          </button>
+            <button class="btn" id="add-device-btn">
+                <i class="fas fa-plus"></i>
+                Добавить устройство
+            </button>
+            <button class="btn btn-secondary" id="edit-greenhouse-btn">
+                <i class="fas fa-edit"></i>
+                Изменить
+            </button>
+            <button class="btn btn-danger" id="delete-greenhouse-btn">
+                <i class="fas fa-trash"></i>
+                Удалить
+            </button>
         </div>
+        
         <div class="user-info">
-          <div class="user-avatar" id="user-avatar">И</div>
-          <span id="user-name">Иван Петров</span>
+            <div class="user-avatar" id="user-avatar">И</div>
+            <span id="user-name">Иван Петров</span>
         </div>
-      </div>
-    </header>
+    </div>
+</header>
 
     <div class="content">
       <!-- Заголовок и информация о теплице -->
