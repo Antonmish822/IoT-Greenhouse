@@ -859,30 +859,41 @@
       }, 30000);
     });
 
-    // Загрузка данных теплицы (если нет API для теплиц)
-    async function loadGreenhouseData() {
-      const urlParams = new URLSearchParams(window.location.search);
-      currentGreenhouseId = urlParams.get('greenhouse_id') || 1;
-      
-      // Сохраняем ID в localStorage для навигации
-      localStorage.setItem('current_greenhouse_id', currentGreenhouseId);
-      
-      // Если API теплиц нет, используем данные из localStorage или скриншота
-      const greenhouseName = localStorage.getItem('current_greenhouse_name') || 'МБОУ ЛИЦЕЙ № 67';
-      const greenhouseLocation = localStorage.getItem('current_greenhouse_location') || 'Парское';
-      
-      const mockGreenhouseData = {
-        id: currentGreenhouseId,
-        name: greenhouseName,
-        location: greenhouseLocation,
-        is_active: true
-      };
-      
-      currentGreenhouseData = mockGreenhouseData;
-      updateUIWithGreenhouseData(mockGreenhouseData);
-      
-      await loadDevices();
+ // Загрузка данных теплицы из API
+ async function loadGreenhouseData() {
+  const urlParams = new URLSearchParams(window.location.search);
+  currentGreenhouseId = urlParams.get('greenhouse_id');
+  
+  if (!currentGreenhouseId) {
+    console.error('ID теплицы не указан в URL');
+    return;
+  }
+  
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    console.error('Требуется авторизация');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      currentGreenhouseData = await response.json();
+      updateUIWithGreenhouseData(currentGreenhouseData);
+    } else {
+      console.error('Ошибка загрузки данных теплицы:', response.status);
+      alert('Не удалось загрузить данные теплицы');
     }
+  } catch (error) {
+    console.error('Ошибка загрузки данных теплицы:', error);
+    alert('Ошибка подключения к серверу');
+  }
+}
 
     // Загрузка устройств из API
     async function loadDevices() {
