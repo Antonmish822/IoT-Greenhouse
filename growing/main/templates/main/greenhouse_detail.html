@@ -1140,100 +1140,106 @@
 }
 
     // Загрузка устройств из API
-    async function loadDevices() {
-      const token = localStorage.getItem('access_token');
-      
-      try {
-        const response = await fetch(`http://127.0.0.1:8001/devices/`, {
+    // Загрузка устройств из API
+async function loadDevices() {
+  const token = localStorage.getItem('access_token');
+  
+  try {
+      const response = await fetch(`http://127.0.0.1:8001/devices/`, {
           headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
           }
-        });
-        
-        if (response.ok) {
+      });
+      
+      if (response.ok) {
           const allDevices = await response.json();
           
-          // Фильтруем устройства по greenhouse_id (если он есть в metadata)
-          // ИЛИ показываем все устройства пользователя
+          // ФИКС: Правильно фильтруем устройства по greenhouse_id
           devices = allDevices.filter(device => {
-            // Проверяем разные варианты хранения greenhouse_id
-            if (device.greenhouse_id && device.greenhouse_id == currentGreenhouseId) {
-              return true;
-            }
-            if (device.device_metadata && device.device_metadata.greenhouse_id == currentGreenhouseId) {
-              return true;
-            }
-            // Если нет greenhouse_id, показываем все устройства (для демо)
-            return true;
+              // Проверяем разные варианты хранения greenhouse_id
+              const deviceGreenhouseId = device.greenhouse_id || 
+                                        (device.device_metadata && device.device_metadata.greenhouse_id);
+              
+              // Сравниваем числовые значения (приводим к числу)
+              if (deviceGreenhouseId) {
+                  return parseInt(deviceGreenhouseId) === parseInt(currentGreenhouseId);
+              }
+              
+              // Если у устройства нет greenhouse_id, НЕ показываем его
+              return false;
           });
           
-          console.log('Загруженные устройства:', devices);
+          console.log('Загруженные устройства для теплицы', currentGreenhouseId, ':', devices);
           
           updateDevicesUI();
           await loadTelemetryData();
           checkDeviceTypes();
           updateDeleteButtonState();
-        } else {
+      } else {
           console.error('Ошибка загрузки устройств:', response.status);
-          // Демо-данные для тестирования
+          // Демо-данные для тестирования (только для текущей теплицы)
           loadDemoDevices();
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки устройств:', error);
-        // Демо-данные для тестирования
-        loadDemoDevices();
       }
-    }
+  } catch (error) {
+      console.error('Ошибка загрузки устройств:', error);
+      // Демо-данные для тестирования (только для текущей теплицы)
+      loadDemoDevices();
+  }
+}
 
     // Демо-данные для тестирования
-    function loadDemoDevices() {
-      devices = [
-        {
+   // Демо-данные для тестирования
+function loadDemoDevices() {
+  devices = [
+      {
           id: 1,
           name: 'Датчик температуры',
           serial_number: 'de74b54b-d2a6-1110-bd61-69811ecd56db',
           is_active: true,
           last_seen: new Date().toISOString(),
+          greenhouse_id: parseInt(currentGreenhouseId), // Добавляем greenhouse_id
           device_metadata: { 
-            device_type: 'telemetry',
-            greenhouse_id: currentGreenhouseId,
-            sensor_type: 'temperature'
+              device_type: 'telemetry',
+              greenhouse_id: currentGreenhouseId,
+              sensor_type: 'temperature'
           },
           user_id: 1
-        },
-        {
+      },
+      {
           id: 2,
           name: 'Привод форточки',
           serial_number: 'actuator-001',
           is_active: true,
           last_seen: new Date().toISOString(),
+          greenhouse_id: parseInt(currentGreenhouseId), // Добавляем greenhouse_id
           device_metadata: { 
-            device_type: 'actuator',
-            greenhouse_id: currentGreenhouseId,
-            actuator_type: 'window'
+              device_type: 'actuator',
+              greenhouse_id: currentGreenhouseId,
+              actuator_type: 'window'
           },
           user_id: 1
-        },
-        {
+      },
+      {
           id: 3,
           name: 'Датчик влажности',
           serial_number: 'sensor-humidity-001',
           is_active: false,
           last_seen: new Date(Date.now() - 3600000).toISOString(),
+          greenhouse_id: parseInt(currentGreenhouseId), // Добавляем greenhouse_id
           device_metadata: { 
-            device_type: 'telemetry',
-            greenhouse_id: currentGreenhouseId,
-            sensor_type: 'humidity'
+              device_type: 'telemetry',
+              greenhouse_id: currentGreenhouseId,
+              sensor_type: 'humidity'
           },
           user_id: 1
-        }
-      ];
-      
-      updateDevicesUI();
-      checkDeviceTypes();
-      updateDeleteButtonState();
-    }
+      }
+  ];
+  
+  updateDevicesUI();
+  checkDeviceTypes();
+  updateDeleteButtonState();
+}
 
     // Загрузка телеметрии
     async function loadTelemetryData() {
