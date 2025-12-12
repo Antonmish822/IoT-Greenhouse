@@ -1094,13 +1094,13 @@
       if (currentGreenhouseId) {
         loadDevices();
     }
-    
+
       // Автообновление данных каждые 30 секунд
       setInterval(async () => {
         if (currentGreenhouseId) {
           await loadDevices();
         }
-      }, 30000);
+      }, 900000);
     });
 
  // Загрузка данных теплицы из API
