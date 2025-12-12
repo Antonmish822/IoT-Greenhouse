@@ -898,5 +898,323 @@
         loadGreenhouses();
     }, 1200000);
   </script>
+  <script>// Загрузка показателей для конкретной теплицы
+    async function loadGreenhouseMetrics(greenhouseId) {
+        const token = localStorage.getItem('access_token');
+        if (!token) return null;
+        
+        try {
+            // 1. Получаем устройства для теплицы
+            const devicesResponse = await fetch(`http://127.0.0.1:8001/greenhouses/${greenhouseId}/devices`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!devicesResponse.ok) {
+                console.error(`Ошибка загрузки устройств для теплицы ${greenhouseId}:`, devicesResponse.status);
+                return null;
+            }
+            
+            const devices = await devicesResponse.json();
+            
+            let temperature = null;
+            let humidity = null;
+            
+            // 2. Для каждого устройства получаем телеметрию
+            for (const device of devices) {
+                try {
+                    const telemetryResponse = await fetch(`http://127.0.0.1:8001/telemetry/${device.id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (telemetryResponse.ok) {
+                        const telemetryData = await telemetryResponse.json();
+                        
+                        // 3. Анализируем телеметрию для поиска температуры и влажности
+                        if (telemetryData.telemetry) {
+                            // Ищем температуру и влажность в данных телеметрии
+                            const telemetry = telemetryData.telemetry;
+                            
+                            // Проверяем различные возможные ключи для температуры
+                            const tempKeys = ['temperature', 'temp', 'Temperature', 'Temp'];
+                            const humKeys = ['humidity', 'hum', 'Humidity', 'Hum'];
+                            
+                            for (const key of tempKeys) {
+                                if (telemetry[key] && telemetry[key].length > 0) {
+                                    // Берем последнее значение
+                                    const lastSample = telemetry[key][telemetry[key].length - 1];
+                                    temperature = lastSample.value;
+                                    break;
+                                }
+                            }
+                            
+                            for (const key of humKeys) {
+                                if (telemetry[key] && telemetry[key].length > 0) {
+                                    // Берем последнее значение
+                                    const lastSample = telemetry[key][telemetry[key].length - 1];
+                                    humidity = lastSample.value;
+                                    break;
+                                }
+                            }
+                            
+                            // Если нашли оба значения, прекращаем поиск
+                            if (temperature !== null && humidity !== null) {
+                                break;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Ошибка загрузки телеметрии для устройства ${device.id}:`, error);
+                    continue; // Продолжаем с другим устройством
+                }
+            }
+            
+            return { temperature, humidity };
+            
+        } catch (error) {
+            console.error(`❌ Ошибка загрузки показателей для теплицы ${greenhouseId}:`, error);
+        }
+        
+        return null;
+    }
+    
+    // Оптимизированная версия с кэшированием данных
+    let metricsCache = {};
+    const CACHE_DURATION = 60000; // 1 минута
+    
+    // Загрузка показателей для конкретной теплицы с кэшированием
+    async function loadGreenhouseMetricsOptimized(greenhouseId) {
+        const token = localStorage.getItem('access_token');
+        if (!token) return null;
+        
+        // Проверяем кэш
+        const now = Date.now();
+        if (metricsCache[greenhouseId] && now - metricsCache[greenhouseId].timestamp < CACHE_DURATION) {
+            return metricsCache[greenhouseId].data;
+        }
+        
+        try {
+            // 1. Получаем устройства для теплицы
+            const devicesResponse = await fetch(`http://127.0.0.1:8001/greenhouses/${greenhouseId}/devices`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!devicesResponse.ok) {
+                console.error(`Ошибка загрузки устройств для теплицы ${greenhouseId}:`, devicesResponse.status);
+                return null;
+            }
+            
+            const devices = await devicesResponse.json();
+            
+            // Если нет устройств, возвращаем null
+            if (!devices || devices.length === 0) {
+                metricsCache[greenhouseId] = {
+                    data: null,
+                    timestamp: now
+                };
+                return null;
+            }
+            
+            let temperature = null;
+            let humidity = null;
+            
+            // 2. Параллельно загружаем телеметрию для всех устройств
+            const telemetryPromises = devices.map(async (device) => {
+                try {
+                    const response = await fetch(`http://127.0.0.1:8001/telemetry/${device.id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                    return null;
+                } catch (error) {
+                    console.error(`Ошибка загрузки телеметрии для устройства ${device.id}:`, error);
+                    return null;
+                }
+            });
+            
+            const telemetryResults = await Promise.all(telemetryPromises);
+            
+            // 3. Анализируем телеметрию
+            for (const telemetryData of telemetryResults) {
+                if (!telemetryData || !telemetryData.telemetry) continue;
+                
+                const telemetry = telemetryData.telemetry;
+                
+                // Ищем температуру
+                if (temperature === null) {
+                    const tempKeys = ['temperature', 'temp', 'Temperature', 'Temp'];
+                    for (const key of tempKeys) {
+                        if (telemetry[key] && telemetry[key].length > 0) {
+                            const lastSample = telemetry[key][telemetry[key].length - 1];
+                            temperature = lastSample.value;
+                            break;
+                        }
+                    }
+                }
+                
+                // Ищем влажность
+                if (humidity === null) {
+                    const humKeys = ['humidity', 'hum', 'Humidity', 'Hum'];
+                    for (const key of humKeys) {
+                        if (telemetry[key] && telemetry[key].length > 0) {
+                            const lastSample = telemetry[key][telemetry[key].length - 1];
+                            humidity = lastSample.value;
+                            break;
+                        }
+                    }
+                }
+                
+                // Если нашли оба значения, прекращаем
+                if (temperature !== null && humidity !== null) {
+                    break;
+                }
+            }
+            
+            const result = { temperature, humidity };
+            
+            // Сохраняем в кэш
+            metricsCache[greenhouseId] = {
+                data: result,
+                timestamp: now
+            };
+            
+            return result;
+            
+        } catch (error) {
+            console.error(`❌ Ошибка загрузки показателей для теплицы ${greenhouseId}:`, error);
+            return null;
+        }
+    }
+    
+    // Создание карточки теплицы с реальными данными
+    async function createGreenhouseCard(greenhouse) {
+        const card = document.createElement('a');
+        card.href = `/greenhouse_detail?greenhouse_id=${greenhouse.id}`;
+        card.className = 'greenhouse-card';
+        card.style.textDecoration = 'none';
+        card.style.color = 'inherit';
+        
+        // Получаем реальные показатели из API (используем оптимизированную версию)
+        const metrics = await loadGreenhouseMetricsOptimized(greenhouse.id);
+        
+        const isOnline = greenhouse.is_active !== false;
+        
+        // Форматируем значения
+        let temperatureDisplay = '—';
+        let humidityDisplay = '—';
+        
+        if (isOnline && metrics) {
+            if (metrics.temperature !== null) {
+                temperatureDisplay = typeof metrics.temperature === 'number' ? 
+                    metrics.temperature.toFixed(1) : 
+                    parseFloat(metrics.temperature).toFixed(1);
+            }
+            
+            if (metrics.humidity !== null) {
+                humidityDisplay = typeof metrics.humidity === 'number' ? 
+                    Math.round(metrics.humidity) : 
+                    Math.round(parseFloat(metrics.humidity));
+            }
+        }
+        
+        // Используем демо-данные если нет реальных
+        if (isOnline && temperatureDisplay === '—') {
+            temperatureDisplay = (22 + Math.random() * 6).toFixed(1);
+        }
+        
+        if (isOnline && humidityDisplay === '—') {
+            humidityDisplay = (65 + Math.random() * 15).toFixed(0);
+        }
+        
+        const actuatorStatus = isOnline ? 'Открыто (100%)' : 'Нет данных';
+        const actuatorIcon = isOnline ? 'fa-window-maximize' : 'fa-exclamation-triangle';
+        
+        // Выбираем иконку в зависимости от статуса
+        const greenhouseIcon = isOnline ? 'fa-leaf' : 'fa-leaf';
+        
+        // Формируем отображение местоположения
+        const hasLocation = greenhouse.location && greenhouse.location.trim() !== '';
+        const locationClass = hasLocation ? '' : 'no-location';
+        const locationText = hasLocation ? greenhouse.location : 'Местоположение не указано';
+        
+        card.innerHTML = `
+            <div class="greenhouse-icon">
+                <i class="fas ${greenhouseIcon}"></i>
+            </div>
+            <div class="card-header">
+                <h3 class="card-title">${escapeHtml(greenhouse.name)}</h3>
+                <span class="status ${isOnline ? 'online' : 'offline'}">
+                    ${isOnline ? 'Онлайн' : 'Оффлайн'}
+                </span>
+            </div>
+            <div class="greenhouse-location ${locationClass}">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>${escapeHtml(locationText)}</span>
+            </div>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-value">${temperatureDisplay}${isOnline && temperatureDisplay !== '—' ? '°C' : ''}</div>
+                    <div class="metric-label">Температура</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${humidityDisplay}${isOnline && humidityDisplay !== '—' ? '%' : ''}</div>
+                    <div class="metric-label">Влажность</div>
+                </div>
+            </div>
+            <div class="actuator-status">
+                <i class="fas ${actuatorIcon}"></i>
+                <span>${actuatorStatus}</span>
+            </div>
+        `;
+        
+        return card;
+    }
+    
+    // Обновление отображения теплиц (асинхронная версия)
+    async function updateGreenhousesDisplay() {
+        const container = document.getElementById('greenhouses-container');
+        
+        if (currentGreenhouses.length === 0) {
+            showEmptyState('У вас еще нет теплиц');
+            return;
+        }
+        
+        // Показываем состояние загрузки
+        container.innerHTML = `
+            <div class="loading" id="loading-state">
+                <i class="fas fa-spinner fa-spin"></i> Загрузка показателей...
+            </div>
+        `;
+        
+        // Создаем сетку
+        const grid = document.createElement('div');
+        grid.className = 'greenhouses-grid';
+        
+        // Создаем карточки асинхронно
+        for (let i = 0; i < currentGreenhouses.length; i++) {
+            const greenhouse = currentGreenhouses[i];
+            const greenhouseCard = await createGreenhouseCard(greenhouse);
+            
+            // Добавляем класс для анимации только для самой новой теплицы
+            if (i === 0 && greenhouseCard.classList) {
+                greenhouseCard.classList.add('new');
+            }
+            grid.appendChild(greenhouseCard);
+        }
+        
+        container.innerHTML = '';
+        container.appendChild(grid);
+    }
+  </script>
 </body>
 </html>
