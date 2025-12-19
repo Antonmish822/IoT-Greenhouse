@@ -64,7 +64,6 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  /* Никаких margin-left — только flex! */
 }
 
 /* Шапка */
@@ -75,6 +74,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .breadcrumb {
@@ -90,6 +90,7 @@ body {
 
 .breadcrumb span {
   margin: 0 8px;
+  color: #999;
 }
 
 .header-actions {
@@ -118,12 +119,6 @@ body {
   background: var(--primary-dark);
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .user-avatar {
   width: 40px;
   height: 40px;
@@ -136,7 +131,7 @@ body {
   font-weight: bold;
 }
 
-/* Основной контент-область */
+/* Контент */
 .content {
   padding: 30px;
   flex: 1;
@@ -145,10 +140,7 @@ body {
 .page-title {
   font-size: 24px;
   font-weight: 600;
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  color: var(--dark);
 }
 
 .status-badge {
@@ -158,6 +150,8 @@ body {
   font-weight: 600;
   background: rgba(76, 175, 80, 0.15);
   color: var(--primary);
+  margin-top: 6px;
+  display: inline-block;
 }
 
 .status-badge.offline {
@@ -181,54 +175,41 @@ body {
   color: var(--dark);
 }
 
-/* Метрики */
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
-  margin-bottom: 20px;
+/* Заголовок теплицы */
+.greenhouse-header {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.metric-card {
-  text-align: center;
-  padding: 16px;
-  border-radius: 10px;
-  background: #f9f9f9;
+.greenhouse-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
-.metric-value {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
-.metric-label {
-  font-size: 14px;
-  color: #666;
-}
-
-/* Графики */
-.charts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-}
-
-.chart-placeholder {
-  height: 200px;
-  background: #fafafa;
-  border: 1px dashed #ddd;
-  border-radius: 8px;
+.greenhouse-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #888;
+  width: 50px;
+  height: 50px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 12px;
+  color: var(--primary);
+  font-size: 24px;
 }
 
 /* Управление */
-.controls {
+.controls,
+.greenhouse-controls {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -280,7 +261,7 @@ body {
   border-radius: 10px;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 
 .mode-option.active {
@@ -325,7 +306,7 @@ body {
   font-size: 16px;
 }
 
-/* История событий */
+/* История */
 .events-list {
   list-style: none;
 }
@@ -349,6 +330,31 @@ body {
   font-size: 15px;
 }
 
+/* Метрики */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+.metric-card {
+  text-align: center;
+  padding: 16px;
+  border-radius: 10px;
+  background: #f9f9f9;
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.metric-label {
+  font-size: 14px;
+  color: #666;
+}
+
 /* Адаптация для мобильных */
 @media (max-width: 768px) {
   body {
@@ -362,15 +368,8 @@ body {
     padding: 0;
     border-right: none;
     border-bottom: 1px solid var(--border);
-    transform: translateX(0);
-  }
-
-  .sidebar.collapsed {
-    transform: translateX(-100%);
-  }
-
-  .sidebar.expanded {
-    transform: translateX(0);
+    overflow-x: auto;
+    white-space: nowrap;
   }
 
   .logo {
@@ -379,6 +378,7 @@ body {
 
   .nav-item {
     padding: 15px 20px;
+    justify-content: center;
   }
 
   .header {
@@ -401,6 +401,12 @@ body {
     padding: 20px;
   }
 
+  .greenhouse-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
   .charts,
   .auto-settings {
     grid-template-columns: 1fr;
@@ -415,6 +421,10 @@ body {
     align-items: flex-start;
     gap: 8px;
   }
+
+  .greenhouse-controls {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
 }
 
 /* Очень маленькие экраны */
@@ -423,6 +433,7 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+    width: auto;
   }
 
   .user-info {
@@ -433,8 +444,8 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .controls {
-    grid-template-columns: 1fr;
+  .control-btn span {
+    font-size: 12px;
   }
 }
 
@@ -448,4 +459,321 @@ body {
 .btn-danger:disabled {
   background: #f8d7da !important;
   color: #721c24 !important;
+}
+/* ============================================= */
+/* МОБИЛЬНАЯ АДАПТАЦИЯ - ИСПРАВЛЕННАЯ ВЕРСИЯ */
+/* ============================================= */
+
+/* Базовые исправления для мобильных */
+@media (max-width: 768px) {
+  /* Сброс фиксированных отступов */
+  body {
+    flex-direction: column;
+    padding-top: 0 !important;
+  }
+
+  /* Сайдбар - скрываем полностью на мобильных */
+  .sidebar {
+    display: none !important;
+  }
+
+  /* Основной контент занимает всю ширину */
+  .main {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  /* Шапка - исправляем отступы */
+  .header {
+    padding: 15px 20px !important;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  /* Хлебные крошки */
+  .breadcrumb {
+    font-size: 14px;
+    width: 100%;
+  }
+
+  /* Заголовок страницы */
+  .page-title {
+    font-size: 20px;
+    margin-bottom: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  /* Контент - уменьшаем отступы */
+  .content {
+    padding: 20px 15px !important;
+  }
+
+  /* Карточки */
+  .section {
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  /* Метрики - 2 колонки */
+  .metrics {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .metric-card {
+    padding: 15px 10px;
+  }
+
+  .metric-value {
+    font-size: 22px;
+  }
+
+  /* Графики - один под другим */
+  .charts {
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+  }
+
+  .chart-placeholder {
+    height: 180px;
+  }
+
+  /* Управление - 2 колонки */
+  .controls {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .control-btn {
+    padding: 12px 8px;
+    font-size: 14px;
+  }
+
+  /* Режимы - вертикально */
+  .mode-toggle {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mode-option {
+    padding: 15px;
+  }
+
+  /* Настройки - одна колонка */
+  .auto-settings {
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+  }
+
+  /* Формы */
+  .form-group input {
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  /* История событий */
+  .events-list {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+
+  .event-item {
+    padding: 12px 0;
+  }
+
+  /* Кнопки действий в шапке */
+  .header-actions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+  }
+
+  /* Информация о пользователе */
+  .user-info {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+  }
+
+  /* Мобильное меню */
+  .mobile-menu-toggle {
+    display: block !important;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--primary);
+    cursor: pointer;
+    z-index: 1001;
+  }
+
+  /* Мобильное меню (скрытое) */
+  .mobile-nav {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 80%;
+    max-width: 300px;
+    height: 100vh;
+    background: var(--light);
+    z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  }
+
+  .mobile-nav.active {
+    left: 0;
+  }
+
+  .mobile-nav .logo {
+    padding: 20px 0;
+    font-size: 20px;
+    color: var(--primary);
+  }
+
+  .mobile-nav .nav-item {
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #555;
+    text-decoration: none;
+  }
+
+  .mobile-nav .nav-item.active {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .mobile-nav-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+
+  .mobile-nav-overlay.active {
+    display: block;
+  }
+
+  /* Статус */
+  .status-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+  .metrics {
+    grid-template-columns: 1fr !important;
+  }
+
+  .controls {
+    grid-template-columns: 1fr !important;
+  }
+
+  .control-btn {
+    padding: 14px;
+  }
+
+  .page-title {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .user-info {
+    top: 12px;
+    right: 15px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  /* Горизонтальная ориентация */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .content {
+      padding: 15px !important;
+    }
+    
+    .section {
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .chart-placeholder {
+      height: 150px;
+    }
+  }
+}
+
+/* Исправление для iOS */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    .content {
+      padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+    }
+    
+    .header {
+      padding-top: max(15px, env(safe-area-inset-top)) !important;
+    }
+  }
+}
+
+/* Стили для отключенных элементов */
+.btn:disabled,
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Утилиты */
+.mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block !important;
+  }
+  
+  .desktop-only {
+    display: none !important;
+  }
 }

@@ -2010,5 +2010,38 @@ async function deleteGreenhouse() {
       return div.innerHTML;
     }
   </script>
+  <script>
+    // Мобильное меню
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileNav = document.getElementById('mobileNav');
+    const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+    
+    function toggleMobileMenu() {
+        mobileNav.classList.toggle('active');
+        mobileNavOverlay.classList.toggle('active');
+        document.body.style.overflow = mobileNav.classList.contains('active') ? 'hidden' : '';
+    }
+    
+    function closeMobileMenu() {
+        mobileNav.classList.remove('active');
+        mobileNavOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    
+    if (mobileMenuToggle && mobileNav && mobileNavOverlay) {
+        mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+        mobileNavOverlay.addEventListener('click', closeMobileMenu);
+        
+        // Закрытие меню при клике на ссылку
+        document.querySelectorAll('.mobile-nav .nav-item').forEach(item => {
+            item.addEventListener('click', closeMobileMenu);
+        });
+        
+        // Закрытие меню при изменении ориентации
+        window.addEventListener('orientationchange', closeMobileMenu);
+    }
+    // Предотвращение zoom на iOS при фокусе
+    document.addEventListener('touchstart', function() {}, {passive: true});
+  </script>
 </body>
 </html>
