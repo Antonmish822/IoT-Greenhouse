@@ -7,6 +7,30 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   {% load static %}
   <link rel="stylesheet" href="{% static 'main/css/add_device.css' %}">
+  <!-- Добавьте в head для мобильной оптимизации -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#4caf50">
+
+<!-- Для иконок на мобильных -->
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+
+<!-- Предотвращение выделения текста на тап -->
+<style>
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+</style>
 </head>
 <body>
   <!-- Боковое меню -->
@@ -277,6 +301,65 @@
         alert('Ошибка подключения к серверу');
       }
     }
+  </script>
+  <script>// Добавьте в конец вашего HTML или в отдельный JS файл
+    document.addEventListener('DOMContentLoaded', function() {
+      // Предотвращение двойного тапа для зума на мобильных
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(event) {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+    
+      // Улучшение работы вкладок на мобильных
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('touchstart', function() {
+          this.classList.add('tab-active');
+        });
+        
+        tab.addEventListener('touchend', function() {
+          setTimeout(() => this.classList.remove('tab-active'), 150);
+        });
+      });
+    
+      // Адаптивная высота для textarea
+      const textareas = document.querySelectorAll('textarea');
+      textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+          this.style.height = 'auto';
+          this.style.height = (this.scrollHeight) + 'px';
+        });
+      });
+    
+      // Виброотклик на мобильных (если поддерживается)
+      if ('vibrate' in navigator) {
+        const buttons = document.querySelectorAll('.btn, .tab');
+        buttons.forEach(btn => {
+          btn.addEventListener('touchstart', () => {
+            navigator.vibrate(10);
+          });
+        });
+      }
+    
+      // Определение ориентации устройства
+      function handleOrientation() {
+        if (window.matchMedia("(orientation: portrait)").matches) {
+          document.body.classList.add('portrait');
+          document.body.classList.remove('landscape');
+        } else {
+          document.body.classList.add('landscape');
+          document.body.classList.remove('portrait');
+        }
+      }
+    
+      window.addEventListener('orientationchange', handleOrientation);
+      window.addEventListener('resize', handleOrientation);
+      handleOrientation();
+    });
   </script>
 </body>
 </html>

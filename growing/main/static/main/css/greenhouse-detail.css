@@ -31,6 +31,7 @@ body {
   padding: 20px 0;
   display: flex;
   flex-direction: column;
+  transition: transform 0.3s ease;
 }
 
 .logo {
@@ -63,9 +64,10 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  /* Никаких margin-left — только flex! */
 }
 
-/* Шапка с кнопкой */
+/* Шапка */
 .header {
   padding: 20px 30px;
   background: var(--light);
@@ -89,7 +91,6 @@ body {
 .breadcrumb span {
   margin: 0 8px;
 }
-
 
 .header-actions {
   display: flex;
@@ -117,12 +118,6 @@ body {
   background: var(--primary-dark);
 }
 
-.page-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--dark);
-} 
-
 .user-info {
   display: flex;
   align-items: center;
@@ -141,7 +136,7 @@ body {
   font-weight: bold;
 }
 
-/* Контент */
+/* Основной контент-область */
 .content {
   padding: 30px;
   flex: 1;
@@ -170,7 +165,7 @@ body {
   color: var(--danger);
 }
 
-/* Основные блоки */
+/* Секции */
 .section {
   background: white;
   border-radius: 12px;
@@ -186,7 +181,7 @@ body {
   color: var(--dark);
 }
 
-/* Текущие показатели */
+/* Метрики */
 .metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -230,7 +225,7 @@ body {
   color: #888;
 }
 
-/* Управление приводом */
+/* Управление */
 .controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -367,6 +362,15 @@ body {
     padding: 0;
     border-right: none;
     border-bottom: 1px solid var(--border);
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.expanded {
+    transform: translateX(0);
   }
 
   .logo {
@@ -383,7 +387,7 @@ body {
     gap: 15px;
     padding: 15px 20px;
   }
-  
+
   .header-actions {
     width: 100%;
     justify-content: space-between;
@@ -405,7 +409,7 @@ body {
   .mode-toggle {
     flex-direction: column;
   }
-  
+
   .page-title {
     flex-direction: column;
     align-items: flex-start;
@@ -413,56 +417,35 @@ body {
   }
 }
 
-/* Для очень маленьких экранов */
+/* Очень маленькие экраны */
 @media (max-width: 480px) {
   .header-actions {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
   }
-  
+
   .user-info {
     align-self: flex-end;
   }
-  
+
   .metrics {
     grid-template-columns: 1fr;
   }
-  
+
   .controls {
     grid-template-columns: 1fr;
   }
 }
-/* Отключённое состояние кнопок */
+
+/* Отключённые кнопки */
 .btn:disabled {
   opacity: 0.6 !important;
   cursor: not-allowed !important;
   pointer-events: auto;
 }
 
-/* Опционально: специальный стиль для отключённой кнопки удаления */
 .btn-danger:disabled {
   background: #f8d7da !important;
   color: #721c24 !important;
-}
-/* В greenhouse-detail.css должно быть: */
-.main {
-  margin-left: 250px; /* если sidebar фиксированный */
-  padding: 20px;
-}
-
-/* Если этих классов нет, добавьте их в <style> */
-/* Плавная анимация для сайдбара */
-.sidebar {
-    transition: transform 0.3s ease;
-}
-
-@media (max-width: 768px) {
-    .sidebar.collapsed {
-        transform: translateX(-100%);
-    }
-    
-    .sidebar.expanded {
-        transform: translateX(0);
-    }
 }
