@@ -11,9 +11,16 @@ from .database import init_db
 
 settings = Settings()
 app = FastAPI(title=settings.app_name)
+
+allowed_origins = ["http://localhost:8001", "http://localhost:8010"]
+if settings.frontend_allowed_origin:
+    selected_origins = [origin.strip() for origin in settings.frontend_allowed_origin.split(",") if origin.strip()]
+    if selected_origins:
+        allowed_origins = selected_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8001", "http://localhost:8010"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
