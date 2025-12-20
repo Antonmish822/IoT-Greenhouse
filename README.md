@@ -1,112 +1,68 @@
-<!-- 
-  README.md для проекта "Умная теплица"
-  Адаптировано под мобильные устройства, с акцентом на читаемость и стиль (белый + тёмно-зелёный)
--->
+# 🌱 Умная теплица
 
-<div align="center">
-
-  <h1>🌱 Умная теплица</h1>
-  <p><strong>IoT-система автоматического проветривания на базе ESP32</strong></p>
-
-  <!-- Кастомный SVG-баннер с тёмно-зелёным (#0D3B2A) и белым (#FFFFFF) фоном -->
-  <img src="https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white&style=flat-square" alt="HTML5">
-  <img src="https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white&style=flat-square" alt="CSS3">
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black&style=flat-square" alt="JavaScript">
-
-  <br><br>
-
-  <img src="https://img.shields.io/badge/Responsive-%E2%9C%93-0D3B2A?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Mobile-Friendly">
-  <img src="https://img.shields.io/badge/Color_Scheme-White_&_Dark_Green-0D3B2A?style=for-the-badge" alt="Color Scheme: White & Dark Green">
-
-</div>
-
-Веб-приложение для удалённого мониторинга и управления микроклиматом в теплицах с помощью IoT-устройств на базе ESP32.
+Всё про IoT-экосистему автоматизированного проветривания теплиц: фронтенд, FastAPI-бэкенд и Django-панель. Проект включает документированные сервисы, готовую инфраструктуру и простые шаблоны для управления микроклиматом.
 
 ---
 
-## 🌟 Возможности
+## 📌 Состав проекта
 
-- 📊 **Просмотр текущих показателей**: температура, влажность, состояние линейного привода  
-- 🔄 **Ручное и автоматическое управление** проветриванием  
-- 🔔 **Уведомления** о событиях и ошибках (в интерфейсе и/или push/SMS*)  
-- 📲 **Привязка устройств** через QR-код или ручной ввод  
-- 📱 **Адаптивный интерфейс** — одинаково удобен на ПК, планшете и смартфоне  
-
-> *Push/SMS — планируется во внешних интеграциях; текущая версия фокусируется на веб-уведомлениях.
+- [`backend/`](backend/README.md:1) — сервис на FastAPI/SQLModel с JWT, ThingsBoard-интеграцией и полным описанием маршрутов, моделей, зависимостей и переменных окружения с примерами (`backend/README.md`).
+- [`growing/`](growing/README.md:1) — шаблонное Django-приложение `main` с простыми представлениями, страницами (включая логин, дашборд, уведомления, добавление устройств) и статикой, описанное в [`growing/README.md`](growing/README.md:1).
+- [`docs/`](docs/index.adoc:1) — документация AsciiDoc и диаграммы, включая OpenAPI (`docs/swagger/IoT_Greenhouse.yaml`).
+- [`frontend/`](frontend/architecture.md:1) — прототипы и черновики интерфейсов (актуальный фронтенд оформляется в этом каталоге).
 
 ---
 
-## 📂 Структура проекта
-```text
-.
-├── docs/ # Техническая документация (в формате AsciiDoc)
-│
-├── frontend/
-│ ├── drafts/ # Макеты и прототипы страниц (не для продакшена)
-│ └── ... # Финальные HTML/CSS/JS — будут здесь
-│
-└── README.md # Этот файл
+## 🎯 Возможности всего решения
+
+- **Backend (FastAPI)**: JWT-аутентификация, CRUD-операции по пользователям, устройствам и теплицам, ThingsBoard-проверка устройств, телеметрия и SQLModel-сессии (описание — [`backend/README.md`](backend/README.md:1-60)).
+- **Django-управление**: простые шаблонные страницы (логин, табло, профиль, уведомления и др.), маршруты в `growing/main/urls.py` и статическое оформление (`growing/main/static/main/css/`) — см. [`growing/README.md`](growing/README.md:1-17).
+- **Документация**: архитектура и ERD-диаграммы в `docs/`, OpenAPI-спецификация для бэкенда.
+
+---
+
+## 💻 Как запускать
+
+### Backend
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
-🔗 [Черновик верстки: `dashboard.html`](frontend/drafts/dashboard.html)
+Документация доступна на `/docs` и `/redoc` при поднятом бэкенде. Создайте `.env` по примеру (см. [`backend/app/config.py`](backend/app/config.py:1-24) и `backend/README.md`).
+
+### Django-панель
+
+```bash
+cd growing
+python -m venv .venv
+source .venv/bin/activate
+pip install Django==5.2.8
+python manage.py migrate
+python manage.py runserver 8010 
+```
+
+Доступ по умолчанию `http://127.0.0.1:8010/` (страница логина из `growing/main/templates/main/login.html`).
 
 ---
 
-## 🛠 Разработка
+## 🧪 Разработка и вклад
 
-### Соглашения
-
-| Параметр     | Значение                     |
-|--------------|------------------------------|
-| **Имена файлов** | `kebab-case` (например, `add-device.html`) |
-| **Кодировка**    | UTF-8                        |
-| **Отступы**      | 2 пробела                    |
-| **Стилизация**   | Чистый CSS + мобильная адаптация через `@media` (без фреймворков) |
-
-> ✅ Интерфейс тестируется на ширинах от 320px (мобильные) до 1920px (десктоп).
- 
- ## ⚙️ Backend (FastAPI)
- 
- Бэкенд — FastAPI-сервис внутри каталога <code>backend/app</code> с настройками через <code>Settings</code>, SQLModel и JWT-конфигурацией. SQLite-файл <code>backend/dev.db</code> создаётся автоматически после первого запуска сервиса.
- 
- ### Что реализовано
- - <code>/auth/register</code> создаёт пользователя, хеширует пароль и возвращает DTO.
- - <code>/auth/login</code> возвращает JWT (Bearer) и профиль пользователя.
- - <code>/profile</code> (GET/PUT) читает или обновляет пользователя, проверяя токен через <code>OAuth2PasswordBearer</code>.
- - Пароли хранятся через <code>passlib[bcrypt]</code>, токены кодируются <code>python-jose</code>, конфигурация подтягивается из переменных окружения.
- 
- ### Запуск
- ```bash
- python -m venv .venv
- source .venv/bin/activate
- pip install fastapi uvicorn[standard] sqlmodel passlib[bcrypt] python-jose
- export JWT_SECRET="достаточно-случайная-строка"
- uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8001
- ```
- 
- Документация OpenAPI доступна по <code>http://localhost:8000/docs</code>, а файл <code>docs/swagger/IoT_Greenhouse.yaml</code> описывает полный набор эндпоинтов и моделей.
- 
- ---
-
-## 🤝 Вклад в проект
-
-Pull Request'ы приветствуются! 🙌  
-Пожалуйста, соблюдайте правила:
-- Новые макеты → в `frontend/drafts/`
-- Готовые страницы → в корень `frontend/`
-- Документация → в `docs/` (в формате AsciiDoc)
+- В `backend/` добавляйте сервисы, контроллеры и схемы согласно архитектуре FastAPI/SQLModel; сервисы описаны в `backend/app/services`, контроллеры в `backend/app/controllers`.
+- Развивайте Django-часть через `growing/main/views.py` и шаблоны, а новые стили — в `growing/main/static/main/css/`.
+- Документируйте сложные изменения в `docs/` (AsciiDoc и yaml). Pull Request'ы приветствуются.
 
 ---
 
-## ⚖ Лицензия
+## ⚖️ Лицензия
 
 Проект распространяется под лицензией **[MIT](LICENSE)**.
 
 ---
 
-## 👥 Авторы
+## 👥 Авторы и идея
 
-Разработано для дачников, фермеров и энтузиастов умного сельского хозяйства.  
-Цель — сделать автоматизацию доступной, надёжной и удобной даже в полевых условиях.
-
-> 🌿 *Выращивайте с умом.*
+Для дачников и фермеров: прозрачно соединённый стек (FastAPI + Django + чистый фронтенд) делает автоматизацию теплиц понятной и расширяемой.
