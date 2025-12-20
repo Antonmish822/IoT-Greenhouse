@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "replace_this_with_secure_random_value"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
+    frontend_allowed_origin: str | None = None
     thingsboard_url: str = ""
     thingsboard_token: str = ""
     thingsboard_device_check_path: str = "api/device/{serial_number}"
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
     thingsboard_login_path: str = "/api/auth/login"
     thingsboard_request_timeout: float = 10.0
     thingsboard_telemetry_path: str = "/api/plugins/telemetry/DEVICE/{device_id}/values/timeseries"
-    thingsboard_telemetry_keys: str = "temperature,humidity,windowPosition"
+    thingsboard_telemetry_keys: str = "temperature,humidity,windowPosition,status,position"
     thingsboard_telemetry_limit: int = 120
 
     class Config:
