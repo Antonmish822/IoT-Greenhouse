@@ -81,7 +81,7 @@
  source .venv/bin/activate
  pip install fastapi uvicorn[standard] sqlmodel passlib[bcrypt] python-jose
  export JWT_SECRET="достаточно-случайная-строка"
- uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+ uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8001
  ```
  
  Документация OpenAPI доступна по <code>http://localhost:8000/docs</code>, а файл <code>docs/swagger/IoT_Greenhouse.yaml</code> описывает полный набор эндпоинтов и моделей.
