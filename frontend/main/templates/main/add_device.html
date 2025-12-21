@@ -131,6 +131,14 @@
   </main>
 
   <script>
+    window.SG_API = window.SG_API || {};
+    window.SG_API.hosts = window.SG_API.hosts || {};
+    window.SG_API.hosts.backend = '{{ BACKEND_URL }}';
+  </script>
+  <script src="{% static 'main/js/api_config.js' %}"></script>
+  <script>
+    const backendFetch = window.SG_API.fetch;
+    const buildApiUrl = window.SG_API.buildUrl;
     let currentGreenhouseId = null;
     let currentGreenhouseName = null;
 
@@ -171,20 +179,27 @@
       // Загружаем данные теплицы из API
       fetchGreenhouseData();
     }
-
-    async function fetchGreenhouseData() {
+ 
+    const authorizedFetch = async (path, options = {}) => {
       const token = localStorage.getItem('access_token');
       if (!token) {
-        console.error('Требуется авторизация');
-        return;
+        throw new Error('Требуется авторизация');
       }
-      
-      try {
-        const response = await fetch(`http://127.0.0.1:8001/greenhouses/${currentGreenhouseId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+ 
+      const mergedOptions = {
+        ...options,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          ...(options.headers || {})
+        }
+      };
+ 
+      return backendFetch(path, mergedOptions);
+    };
+ async function fetchGreenhouseData() {
+   try {
+     const response = await authorizedFetch(`/greenhouses/${currentGreenhouseId}`);
+     
         
         if (response.ok) {
           const data = await response.json();
@@ -204,10 +219,12 @@
         }
       }
     }
-
-    function updateGreenhouseUI(data) {
-      const greenhouseNameElement = document.getElementById('current-greenhouse-name');
-      const greenhouseLinkElement = document.getElementById('greenhouse-link');
+function updateGreenhouseUI(data) {
+  const greenhouseNameElement = document.getElementById('current-greenhouse-name');
+  const greenhouseLinkElement = document.getElementById('greenhouse-link');
+  currentGreenhouseName = data.name;
+  localStorage.setItem('current_greenhouse_name', data.name);
+  
       
       if (greenhouseNameElement) {
         greenhouseNameElement.textContent = data.name;
@@ -268,19 +285,12 @@
         };
         
         // Отправляем запрос к API
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-          alert('Требуется авторизация. Пожалуйста, войдите в систему.');
-          return;
-        }
-        
-        const response = await fetch('http://127.0.0.1:8001/devices/', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(deviceData)
+        const response = await authorizedFetch('/devices/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(deviceData)
         });
         
         if (response.ok) {

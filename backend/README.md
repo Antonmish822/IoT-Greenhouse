@@ -42,7 +42,7 @@
 3. Запустите команду:
 
 ```bash
-uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8001
+uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8001
 ```
 
 Сервис станет доступен по `http://127.0.0.1:8000`, документация автоматически публикуется на `/docs` и `/redoc`.

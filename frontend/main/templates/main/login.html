@@ -138,6 +138,14 @@
 </div>
 
 <script>
+    window.SG_API = window.SG_API || {};
+    window.SG_API.hosts = window.SG_API.hosts || {};
+    window.SG_API.hosts.backend = '{{ BACKEND_URL }}';
+</script>
+<script src="{% static 'main/js/api_config.js' %}"></script>
+<script>
+    const backendFetch = window.SG_API.fetch;
+    const buildApiUrl = window.SG_API.buildUrl;
     document.addEventListener('DOMContentLoaded', function() {
         const loginTab = document.getElementById('login-tab');
         const registerTab = document.getElementById('register-tab');
@@ -193,7 +201,7 @@
             
             try {
                 // 1. Авторизация через API
-                const response = await fetch('http://127.0.0.1:8001/auth/login', {
+                const response = await backendFetch('/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -219,7 +227,7 @@
                 localStorage.setItem('access_token', token);
                 
                 // 2. Получаем профиль пользователя через правильный endpoint
-                const profileResponse = await fetch('http://127.0.0.1:8001/profile/', {
+                const profileResponse = await backendFetch('/profile/', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -301,7 +309,7 @@
             
             try {
                 // Регистрация через API
-                const response = await fetch('http://127.0.0.1:8001/auth/register', {
+                const response = await backendFetch('/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -360,7 +368,7 @@
         // Проверяем, есть ли токен при загрузке страницы
         const token = localStorage.getItem('access_token');
         if (token) {
-            fetch('http://127.0.0.1:8001/profile/', {
+            backendFetch('/profile/', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
