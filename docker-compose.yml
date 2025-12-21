@@ -8,7 +8,7 @@ services:
     env_file:
       - backend/.env
     ports:
-      - "8001:8001"
+      - "8002:8001"
     volumes:
       - backend_data:/app/data
     restart: unless-stopped
@@ -17,6 +17,8 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    env_file:
+      - frontend/.env
     ports:
       - "8000:8010"
     depends_on:
