@@ -393,12 +393,20 @@
       </form>
     </div>
   </div>
-
-  <script>
-    // Глобальная переменная для хранения теплиц
-    let currentGreenhouses = [];
-    
-    document.addEventListener('DOMContentLoaded', function() {
+ 
+   <script>
+     window.SG_API = window.SG_API || {};
+     window.SG_API.hosts = window.SG_API.hosts || {};
+     window.SG_API.hosts.backend = '{{ BACKEND_URL }}';
+   </script>
+   <script src="{% static 'main/js/api_config.js' %}"></script>
+   <script>
+     const backendFetch = window.SG_API.fetch;
+     const buildApiUrl = window.SG_API.buildUrl;
+     // Глобальная переменная для хранения теплиц
+     let currentGreenhouses = [];
+     
+     document.addEventListener('DOMContentLoaded', function() {
         // Загружаем профиль пользователя
         loadUserProfile();
         
@@ -486,7 +494,7 @@
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
         saveBtn.disabled = true;
         
-        const response = await fetch('http://127.0.0.1:8001/greenhouses/', {
+        const response = await backendFetch('/greenhouses/', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -675,7 +683,7 @@
             const token = localStorage.getItem('access_token');
             if (token) {
                 try {
-                    const response = await fetch('http://127.0.0.1:8001/profile/', {
+                    const response = await backendFetch('/profile/', {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
@@ -745,7 +753,7 @@
         }
         
         try {
-            const response = await fetch('http://127.0.0.1:8001/greenhouses/', {
+            const response = await backendFetch('/greenhouses/', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -915,7 +923,7 @@
         
         try {
             // 1. Получаем устройства для теплицы
-            const devicesResponse = await fetch(`http://127.0.0.1:8001/greenhouses/${greenhouseId}/devices`, {
+            const devicesResponse = await backendFetch(`/greenhouses/${greenhouseId}/devices`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -948,7 +956,7 @@
             // 2. Параллельно загружаем телеметрию для всех устройств
             const telemetryPromises = devices.map(async (device) => {
                 try {
-                    const response = await fetch(`http://127.0.0.1:8001/telemetry/${device.id}`, {
+                    const response = await backendFetch(`/telemetry/${device.id}`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }

@@ -150,11 +150,19 @@
         </button>
       </div>
     </div>
-  </div>
-
-  <script>
-    // Глобальные переменные
-    let userData = null;
+    </div>
+  
+    <script>
+      window.SG_API = window.SG_API || {};
+      window.SG_API.hosts = window.SG_API.hosts || {};
+      window.SG_API.hosts.backend = '{{ BACKEND_URL }}';
+    </script>
+    <script src="{% static 'main/js/api_config.js' %}"></script>
+    <script>
+      const backendFetch = window.SG_API.fetch;
+      const buildApiUrl = window.SG_API.buildUrl;
+      // Глобальные переменные
+      let userData = null;
 
     document.addEventListener('DOMContentLoaded', function() {
       // Загружаем данные профиля
@@ -177,7 +185,7 @@
       }
       
       try {
-        const response = await fetch('http://127.0.0.1:8001/profile/', {
+        const response = await backendFetch('/profile/', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -286,7 +294,7 @@
       }
       
       try {
-        const response = await fetch('http://127.0.0.1:8001/profile/', {
+        const response = await backendFetch('/profile/', {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -344,7 +352,7 @@
       }
       
       try {
-        const response = await fetch('http://127.0.0.1:8001/profile/', {
+        const response = await backendFetch('/profile/', {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
