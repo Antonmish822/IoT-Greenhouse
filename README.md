@@ -42,10 +42,23 @@ python -m venv .venv
 source .venv/bin/activate
 pip install Django==5.2.8
 python manage.py migrate
-python manage.py runserver 8010 
+python manage.py runserver 8010
 ```
 
 Доступ по умолчанию `http://127.0.0.1:8010/` (страница логина из `growing/main/templates/main/login.html`).
+
+### Docker-compose + nginx-прокси
+
+```bash
+docker compose up -d --build
+```
+
+Запускает три контейнера:
+- `backend` (FastAPI на порту 8001)
+- `frontend` (Django на порту 8010)
+- `nginx` (слушает 80 порт и проксирует `/api/` на `backend`, остальные пути — на `frontend`).
+
+Пример конфигурации прокси находится в `nginx/default.conf`. Перед стартом убедитесь, что в `frontend/.env` заданы `BACKEND_URL=http://iotgreenhouse.ru/api` и `ALLOWED_HOSTS` включает `iotgreenhouse.ru`, а домен `iotgreenhouse.ru` резолвится на хост с контейнерами.
 
 ---
 
