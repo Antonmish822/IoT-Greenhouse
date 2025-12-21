@@ -59,10 +59,30 @@ docker compose up -d --build
 - `nginx` (слушает 80 порт и проксирует `/api/` на `backend`, остальные пути — на `frontend`).
 
 Пример конфигурации прокси находится в `nginx/default.conf`. Перед стартом убедитесь, что в `frontend/.env` заданы `BACKEND_URL=http://iotgreenhouse.ru/api` и `ALLOWED_HOSTS` включает `iotgreenhouse.ru`, а домен `iotgreenhouse.ru` резолвится на хост с контейнерами.
-
----
-
-## 🧪 Разработка и вклад
+ 
++### SSL-сертификат iotgreenhouse.ru
++
++1. Убедитесь, что домен `iotgreenhouse.ru` резолвится на ваш хост и что порты 80 и 443 свободны. При необходимости остановите уже работающие сервисы (например, системный `nginx`).
++2. Получите сертификат с помощью `certbot` (standalone). Пример команды:
++   ```bash
++   sudo certbot certonly --standalone -d iotgreenhouse.ru --agree-tos --email admin@iotgreenhouse.ru
++   ```
++3. Скопируйте и переименуйте сертификат и ключ в проект:
++   ```bash
++   mkdir -p nginx/certs
++   sudo cp /etc/letsencrypt/live/iotgreenhouse.ru/fullchain.pem nginx/certs/iotgreenhouse.crt
++   sudo cp /etc/letsencrypt/live/iotgreenhouse.ru/privkey.pem nginx/certs/iotgreenhouse.key
++   sudo chown $(id -u):$(id -g) nginx/certs/*
++   ```
++4. Перезапустите контейнеры:
++   ```bash
++   docker compose up -d --build
++   ```
++   При обновлении сертификата (`certbot renew`) повторите копирование и перезапуск.
++
+ ---
+ 
+ ## 🧪 Разработка и вклад
 
 - В `backend/` добавляйте сервисы, контроллеры и схемы согласно архитектуре FastAPI/SQLModel; сервисы описаны в `backend/app/services`, контроллеры в `backend/app/controllers`.
 - Развивайте Django-часть через `growing/main/views.py` и шаблоны, а новые стили — в `growing/main/static/main/css/`.
