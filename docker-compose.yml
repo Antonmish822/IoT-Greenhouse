@@ -7,6 +7,8 @@ services:
       dockerfile: backend/Dockerfile
     env_file:
       - backend/.env
+    environment:
+      DATABASE_URL: sqlite:////app/data/dev.db
     ports:
       - "8002:8001"
     volumes:
@@ -23,6 +25,10 @@ services:
       - "8000:8010"
     depends_on:
       - backend
+    environment:
+      DJANGO_DB_PATH: /app/data/db.sqlite3
+    volumes:
+      - frontend_data:/app/data
     command: >
       /bin/sh -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8010"
     restart: unless-stopped
@@ -42,3 +48,4 @@ services:
 
 volumes:
   backend_data:
+  frontend_data:

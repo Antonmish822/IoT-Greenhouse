@@ -17,6 +17,8 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://127.0.0.1:8001')
+DJANGO_DB_PATH = os.getenv('DJANGO_DB_PATH')
+DB_PATH = Path(DJANGO_DB_PATH) if DJANGO_DB_PATH else BASE_DIR / 'db.sqlite3'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS if host.strip()]
@@ -81,7 +83,7 @@ WSGI_APPLICATION = 'growing.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DB_PATH,
     }
 }
 # Password validation
