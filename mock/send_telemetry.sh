@@ -2,7 +2,7 @@
 set -euo pipefail
 
 API_URL="http://81.177.135.202:5010/api/v1/huCYGnamm3DCdkHfSq8r/telemetry"
-INTERVAL=20
+INTERVAL=10
 
 send_payload() {
   local temperature humidity payload response
