@@ -1,0 +1,12 @@
+# mock для имитации работы датчиков
+services:
+  mock-sender:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - .:/app/mock
+    environment:
+      - MOCK_CONFIG_FILE=/app/mock/config.json
+    command: >
+      /bin/bash -c "set -euo pipefail && DEBIAN_FRONTEND=noninteractive apt-get update -y >/tmp/apt.log && DEBIAN_FRONTEND=noninteractive apt-get install -y curl >/tmp/apt.log && python3 /app/mock/send_telemetry.py"
+    restart: unless-stopped
