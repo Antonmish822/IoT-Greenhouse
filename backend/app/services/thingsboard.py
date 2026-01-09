@@ -100,3 +100,24 @@ def fetch_device_telemetry(
         raise RuntimeError("Failed to read telemetry from ThingsBoard") from exc
 
     return response.json()
+
+
+def send_rpc_request(device_id: str, method: str, params: dict[str, Any]) -> None:
+    if not settings.thingsboard_url:
+        raise RuntimeError("ThingsBoard URL is not configured")
+
+    path = f"/api/plugins/rpc/oneway/{device_id}"
+    url = _normalize_path(path)
+    token = get_thingsboard_token()
+    headers = {"X-Authorization": f"Bearer {token}"}
+    payload = {"method": method, "params": params}
+
+    try:
+        response = httpx.post(url, headers=headers, json=payload, timeout=settings.thingsboard_request_timeout)
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise RuntimeError(
+            f"ThingsBoard RPC request failed ({exc.response.status_code}): {exc.response.text}"
+        ) from exc
+    except httpx.HTTPError as exc:
+        raise RuntimeError("Failed to send RPC request to ThingsBoard") from exc

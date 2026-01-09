@@ -1251,13 +1251,8 @@ function loadDemoDevices() {
       const token = localStorage.getItem('access_token');
       telemetryData = {};
       
-      // Загружаем телеметрию только для устройств телеметрии
-      const telemetryDevices = devices.filter(device => {
-        const deviceType = getDeviceType(device);
-        return deviceType === 'telemetry' || deviceType === 'sensor';
-      });
-      
-      for (const device of telemetryDevices) {
+          // Загружаем телеметрию для ВСЕХ устройств, так как приводы тоже имеют телеметрию (статус)
+      for (const device of devices) {
         try {
           const response = await backendFetch(`/telemetry/${device.id}`, {
             headers: {
@@ -1578,18 +1573,16 @@ function loadDemoDevices() {
       let actuatorHTML = '';
       
       actuatorDevices.forEach(device => {
-        let currentPosition = 'неизвестно';
         let status = 'неизвестно';
         
         if (telemetryData[device.id] && telemetryData[device.id].telemetry) {
           const telemetry = telemetryData[device.id].telemetry;
           
-          if (telemetry.position && telemetry.position.length > 0) {
-            const lastPos = telemetry.position[telemetry.position.length - 1];
-            currentPosition = `${lastPos.value}%`;
-          } else if (telemetry.status && telemetry.status.length > 0) {
-            const lastStatus = telemetry.status[telemetry.status.length - 1];
-            status = lastStatus.value === 'open' ? 'Открыт' : 'Закрыт';
+          if (telemetry.actuatorOpen && telemetry.actuatorOpen.length > 0) {
+            const lastSample = telemetry.actuatorOpen[telemetry.actuatorOpen.length - 1];
+            // The value is a string "true" or "false", not a boolean.
+            const lastState = lastSample.value;
+            status = (lastState === 'true') ? 'Открыт' : 'Закрыт';
           }
         }
         
@@ -1620,7 +1613,7 @@ function loadDemoDevices() {
             <div class="actuator-position">
               Текущий статус: 
               <span class="position-value">
-                ${currentPosition !== 'неизвестно' ? currentPosition : status}
+                ${status}
               </span>
             </div>
           </div>
@@ -1958,44 +1951,41 @@ async function deleteGreenhouse() {
     // Отправка команды на привод
     async function sendActuatorCommand(deviceId, command) {
       const token = localStorage.getItem('access_token');
-      
+      if (!token) {
+        alert('Требуется авторизация');
+        return;
+      }
+
+      const rpcPayload = {
+        method: 'setActuatorState',
+        params: {
+          state: command // command is 'open', 'close', or 'stop'
+        }
+      };
+
       try {
-        // Если есть API для отправки команд
-        const response = await backendFetch(`/devices/${deviceId}/command`, {
+        const response = await backendFetch(`/rpc/${deviceId}`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ command: command })
+          body: JSON.stringify(rpcPayload)
         });
-        
+
         if (response.ok) {
-          alert(`Команда "${command}" отправлена на устройство ${deviceId}`);
-          // Обновляем телеметрию через 2 секунды
+          alert(`Команда "${command}" успешно отправлена.`);
+          // Можно добавить небольшую задержку для обновления статуса
           setTimeout(async () => {
             await loadTelemetryData();
-          }, 2000);
+          }, 3000);
         } else {
-          throw new Error('API не доступно');
+          const errorData = await response.json();
+          alert(`Ошибка отправки команды: ${errorData.detail || 'Неизвестная ошибка'}`);
         }
       } catch (error) {
-        console.error('Ошибка отправки команды:', error);
-        // Демо-режим: имитация отправки команды
-        alert(`Команда "${command}" отправлена на устройство ${deviceId} (демо-режим)`);
-        
-        // Имитация обновления телеметрии
-        if (telemetryData[deviceId]) {
-          const now = Math.floor(Date.now() / 1000);
-          if (command === 'open') {
-            telemetryData[deviceId].telemetry.position = [{ ts: now, value: 100 }];
-            telemetryData[deviceId].telemetry.status = [{ ts: now, value: 'open' }];
-          } else if (command === 'close') {
-            telemetryData[deviceId].telemetry.position = [{ ts: now, value: 0 }];
-            telemetryData[deviceId].telemetry.status = [{ ts: now, value: 'closed' }];
-          }
-          updateActuatorUI();
-        }
+        console.error('Ошибка отправки RPC команды:', error);
+        alert('Не удалось связаться с сервером для отправки команды.');
       }
     }
 
