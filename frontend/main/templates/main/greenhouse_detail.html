@@ -495,7 +495,144 @@
       margin-bottom: 10px;
       color: #666;
     }
-
+ 
+    .automation-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+ 
+    .automation-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 16px;
+      background: #fafafa;
+      box-shadow: inset 0 0 0 1px rgba(76, 175, 80, 0.08);
+    }
+ 
+    .automation-summary-item {
+      min-height: 48px;
+    }
+ 
+    .automation-summary-label {
+      font-size: 12px;
+      color: #777;
+      display: block;
+      margin-bottom: 4px;
+    }
+ 
+    .automation-status-badge {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 90px;
+      text-align: center;
+    }
+ 
+    .automation-active {
+      background: rgba(76, 175, 80, 0.15);
+      color: var(--primary);
+    }
+ 
+    .automation-inactive {
+      background: rgba(244, 67, 54, 0.15);
+      color: var(--danger);
+    }
+ 
+    .automation-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+ 
+    .automation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+ 
+    .automation-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+      font-weight: 500;
+    }
+ 
+    .automation-form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+ 
+    .automation-feedback {
+      font-size: 13px;
+      color: #444;
+    }
+ 
+    .automation-feedback-success {
+      color: var(--success);
+    }
+ 
+    .automation-feedback-error {
+      color: var(--danger);
+    }
+ 
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 56px;
+      height: 30px;
+    }
+ 
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+ 
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      border-radius: 999px;
+      transition: 0.3s;
+    }
+ 
+    .toggle-slider:before {
+      position: absolute;
+      content: '';
+      height: 24px;
+      width: 24px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+ 
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: var(--primary);
+    }
+ 
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
+ 
     /* Модальные окна */
     .modal {
       display: none;
@@ -1021,7 +1158,48 @@
           <!-- Управление приводами будет добавляться динамически -->
         </div>
       </section>
-
+ 
+      <section class="section automation-section" id="automation-section" style="display: none;">
+        <h2 class="section-title">Автоматизация температуры</h2>
+        <div class="automation-summary" id="automation-summary">
+          <div class="automation-summary-item">
+            <span class="automation-summary-label">Статус</span>
+            <span id="automation-status" class="automation-status-badge automation-inactive">Выключено</span>
+          </div>
+          <div class="automation-summary-item">
+            <span class="automation-summary-label">Последнее действие</span>
+            <span id="automation-last-action">—</span>
+          </div>
+          <div class="automation-summary-item">
+            <span class="automation-summary-label">Обновлено</span>
+            <span id="automation-last-action-time">—</span>
+          </div>
+        </div>
+        <form id="automation-form" class="automation-form">
+          <div class="automation-grid">
+            <div class="form-group">
+              <label for="automation-auto-mode">Автоматический режим</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="automation-auto-mode">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label for="automation-target-temperature">Целевая температура (°C)</label>
+              <input type="number" step="0.1" min="-30" max="80" id="automation-target-temperature" class="automation-input">
+            </div>
+            <div class="form-group">
+              <label for="automation-hysteresis">Гистерезис (°C)</label>
+              <input type="number" step="0.1" min="0" max="20" id="automation-hysteresis" class="automation-input">
+            </div>
+          </div>
+          <div class="automation-form-actions">
+            <button type="submit" class="btn">Сохранить настройки</button>
+            <div id="automation-feedback" class="automation-feedback" aria-live="polite"></div>
+          </div>
+        </form>
+      </section>
+ 
       <!-- Графики телеметрии -->
       <section class="section" id="charts-section" style="display: none;">
         <h2 class="section-title">Графики за 24 часа</h2>
@@ -1089,6 +1267,8 @@
     let currentGreenhouseData = null;
     let devices = [];
     let telemetryData = {};
+    let automationSetting = null;
+    let automationFeedbackTimer = null;
 
     document.addEventListener('DOMContentLoaded', function() {
       loadGreenhouseData();
@@ -1134,6 +1314,7 @@
     if (response.ok) {
       currentGreenhouseData = await response.json();
       updateUIWithGreenhouseData(currentGreenhouseData);
+      await loadAutomationSetting();
     } else {
       console.error('Ошибка загрузки данных теплицы:', response.status);
       alert('Не удалось загрузить данные теплицы');
@@ -1180,6 +1361,9 @@ async function loadDevices() {
           updateDevicesUI();
           await loadTelemetryData();
           checkDeviceTypes();
+          if (automationSetting) {
+            updateAutomationUI();
+          }
           updateDeleteButtonState();
       } else {
           console.error('Ошибка загрузки устройств:', response.status);
@@ -1243,6 +1427,9 @@ function loadDemoDevices() {
   
   updateDevicesUI();
   checkDeviceTypes();
+  if (automationSetting) {
+    updateAutomationUI();
+  }
   updateDeleteButtonState();
 }
 
@@ -1653,6 +1840,161 @@ function loadDemoDevices() {
       `;
     }
 
+    async function loadAutomationSetting() {
+      if (!currentGreenhouseId) return;
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        const section = document.getElementById('automation-section');
+        if (section) section.style.display = 'none';
+        return;
+      }
+      try {
+        const response = await backendFetch(`/greenhouses/${currentGreenhouseId}/automation`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          automationSetting = await response.json();
+          updateAutomationUI();
+        } else {
+          console.error('Ошибка загрузки настроек автоматики:', response.status);
+          setAutomationFeedback('Не удалось загрузить настройки автоматики', 'error');
+          const section = document.getElementById('automation-section');
+          if (section) section.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки настроек автоматики:', error);
+        setAutomationFeedback('Не удалось загрузить настройки автоматики', 'error');
+        const section = document.getElementById('automation-section');
+        if (section) section.style.display = 'block';
+      }
+    }
+
+    function updateAutomationUI() {
+      const section = document.getElementById('automation-section');
+      if (!section || !automationSetting) return;
+      const actuatorDevices = devices.filter(device => getDeviceType(device) === 'actuator');
+      if (actuatorDevices.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = 'block';
+      const statusElement = document.getElementById('automation-status');
+      if (statusElement) {
+        statusElement.textContent = automationSetting.auto_mode ? 'Включено' : 'Выключено';
+        statusElement.className = `automation-status-badge ${automationSetting.auto_mode ? 'automation-active' : 'automation-inactive'}`;
+      }
+      const lastActionElement = document.getElementById('automation-last-action');
+      if (lastActionElement) {
+        lastActionElement.textContent = automationSetting.last_action || '—';
+      }
+      const lastActionTimeElement = document.getElementById('automation-last-action-time');
+      if (lastActionTimeElement) {
+        lastActionTimeElement.textContent = automationSetting.last_action_at
+          ? formatDateTimeFromISO(automationSetting.last_action_at)
+          : '—';
+      }
+      const autoModeInput = document.getElementById('automation-auto-mode');
+      const targetInput = document.getElementById('automation-target-temperature');
+      const hysteresisInput = document.getElementById('automation-hysteresis');
+      if (autoModeInput) {
+        autoModeInput.checked = automationSetting.auto_mode;
+      }
+      if (targetInput) {
+        targetInput.value = automationSetting.target_temperature ?? '';
+      }
+      if (hysteresisInput) {
+        hysteresisInput.value = automationSetting.hysteresis ?? '';
+      }
+      setAutomationFeedback('', '');
+    }
+
+    async function saveAutomationSettings(event) {
+      event.preventDefault();
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setAutomationFeedback('Требуется авторизация', 'error');
+        return;
+      }
+      const autoModeInput = document.getElementById('automation-auto-mode');
+      const targetInput = document.getElementById('automation-target-temperature');
+      const hysteresisInput = document.getElementById('automation-hysteresis');
+      if (!autoModeInput || !targetInput || !hysteresisInput) {
+        return;
+      }
+      const targetValue = parseFloat(targetInput.value);
+      const hysteresisValue = parseFloat(hysteresisInput.value);
+      if (Number.isNaN(targetValue) || Number.isNaN(hysteresisValue)) {
+        setAutomationFeedback('Введите числовые значения температуры и гистерезиса', 'error');
+        return;
+      }
+      const payload = {
+        auto_mode: autoModeInput.checked,
+        target_temperature: targetValue,
+        hysteresis: hysteresisValue,
+      };
+      setAutomationFeedback('', '');
+      setAutomationFormDisabled(true);
+      try {
+        const response = await backendFetch(`/greenhouses/${currentGreenhouseId}/automation`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+        if (response.ok) {
+          automationSetting = await response.json();
+          updateAutomationUI();
+          setAutomationFeedback('Настройки автоматики сохранены', 'success');
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          setAutomationFeedback(errorData.detail || 'Не удалось сохранить настройки', 'error');
+        }
+      } catch (error) {
+        console.error('Ошибка сохранения настроек автоматики:', error);
+        setAutomationFeedback('Сервер недоступен, попробуйте позже', 'error');
+      } finally {
+        setAutomationFormDisabled(false);
+      }
+    }
+
+    function setAutomationFeedback(message, type) {
+      const feedbackElement = document.getElementById('automation-feedback');
+      if (!feedbackElement) return;
+      feedbackElement.textContent = message;
+      feedbackElement.classList.remove('automation-feedback-success', 'automation-feedback-error');
+      if (automationFeedbackTimer) {
+        clearTimeout(automationFeedbackTimer);
+        automationFeedbackTimer = null;
+      }
+      if (message) {
+        feedbackElement.classList.add(type === 'success' ? 'automation-feedback-success' : 'automation-feedback-error');
+        automationFeedbackTimer = setTimeout(() => {
+          feedbackElement.textContent = '';
+          feedbackElement.classList.remove('automation-feedback-success', 'automation-feedback-error');
+        }, 6000);
+      }
+    }
+
+    function setAutomationFormDisabled(disabled) {
+      const form = document.getElementById('automation-form');
+      if (!form) return;
+      Array.from(form.elements).forEach(element => {
+        element.disabled = disabled;
+      });
+    }
+
+    function formatDateTimeFromISO(value) {
+      try {
+        return new Date(value).toLocaleString();
+      } catch {
+        return '—';
+      }
+    }
+
     // Вспомогательные функции для телеметрии
     function getSensorDisplayName(sensorType) {
       const names = {
@@ -1724,6 +2066,11 @@ function loadDemoDevices() {
       
       document.getElementById('add-device-btn').addEventListener('click', goToAddDevice);
       
+      const automationForm = document.getElementById('automation-form');
+      if (automationForm) {
+        automationForm.addEventListener('submit', saveAutomationSettings);
+      }
+
       document.getElementById('delete-greenhouse-btn').addEventListener('click', () => {
         if (devices && devices.length > 0) {
           alert('Прежде чем удалять теплицу, удалите все устройства.');

@@ -1,3 +1,8 @@
+from .automation import (
+    AutomationSettingCreate,
+    AutomationSettingRead,
+    AutomationSettingUpdate,
+)
 from .device import DeviceCreate, DeviceRead, DeviceUpdate
 from .greenhouse import (
     GreenhouseCreate,
@@ -7,6 +12,9 @@ from .greenhouse import (
 from .user import UserCreate, UserRead, UserUpdate
 
 __all__ = [
+    "AutomationSettingCreate",
+    "AutomationSettingRead",
+    "AutomationSettingUpdate",
     "DeviceCreate",
     "DeviceRead",
     "DeviceUpdate",

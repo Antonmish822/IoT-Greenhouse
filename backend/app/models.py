@@ -46,3 +46,16 @@ class Device(SQLModel, table=True):
     )
     greenhouse_id: Optional[int] = Field(default=None, foreign_key="greenhouse.id")
     user_id: int = Field(foreign_key="user.id")
+
+
+class AutomationSetting(SQLModel, table=True):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    greenhouse_id: int = Field(foreign_key="greenhouse.id", index=True)
+    auto_mode: bool = Field(default=False)
+    target_temperature: float = Field(default=25.0)
+    hysteresis: float = Field(default=2.0)
+    last_action: Optional[str] = Field(default=None)
+    last_action_at: Optional[datetime] = Field(default=None)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

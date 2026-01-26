@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
 
 
@@ -20,5 +22,5 @@ class Settings(BaseSettings):
     thingsboard_telemetry_limit: int = 120
 
     class Config:
-        env_file = ".env"
+        env_file = Path(__file__).resolve().parents[1] / ".env"
         env_file_encoding = "utf-8"
