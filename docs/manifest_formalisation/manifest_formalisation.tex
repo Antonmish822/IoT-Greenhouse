@@ -1,0 +1,325 @@
+\documentclass{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{amsfonts}
+\usepackage{dsfont}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{geometry}
+\geometry{a4paper, margin=2.5cm}
+
+\newtheorem{theorem}{Теорема}
+\newtheorem{axiom}{Аксиома}
+
+\title{Математическая формализация манифеста устройства \\
+    в системе <<Умный огород>>}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Базовые определения}
+
+\subsection{Пространство типов}
+Определим множество примитивных типов данных:
+
+\[
+    \mathbb{T} = \{\text{String}, \text{Integer}, \text{Float}, \text{Boolean}, \text{Timestamp}, \text{Enum}, \text{Array}, \text{Object}\}
+\]
+
+\subsection{Пространство значений}
+Каждому типу $t \in \mathbb{T}$ соответствует множество допустимых значений $V_t$:
+
+\begin{itemize}
+    \item $V_{\text{String}} = \Sigma^*$, где $\Sigma$ — конечный алфавит
+    \item $V_{\text{Integer}} = \mathbb{Z}$
+    \item $V_{\text{Float}} = \mathbb{R}$
+    \item $V_{\text{Boolean}} = \{\text{true}, \text{false}\}$
+    \item $V_{\text{Timestamp}} = \mathbb{R}_{\geq 0}$ (Unix time)
+    \item $V_{\text{Enum}} = \{e_1, e_2, \ldots, e_n\}$ (конечное множество)
+    \item $V_{\text{Array}} = \bigcup_{n=0}^{\infty} V^n$ (множество всех кортежей)
+    \item $V_{\text{Object}} = \mathcal{P}(\text{Key} \times V)$ (частичные функции из ключей в значения)
+\end{itemize}
+
+\section{Формальное определение манифеста}
+
+\subsection{Манифест как кортеж}
+Манифест устройства $M$ определим как упорядоченный кортеж:
+
+\[
+M = (V, I, T, P, C, N, F, U, S) \in \mathcal{M}
+\]
+
+где $\mathcal{M}$ — пространство всех допустимых манифестов.
+
+\subsection{Компоненты манифеста}
+
+\subsubsection{Версия манифеста}
+\[
+V \in \mathbb{N}^2 \times \mathbb{N}
+\]
+
+$V = (maj, min, patch)$, где $maj, min, patch \in \mathbb{N}$ — семантическая версия.
+
+\subsubsection{Информация об устройстве}
+\[
+I = (id, man, model, rev) \in \mathcal{I}
+\]
+
+где:
+\begin{itemize}
+    \item $id \in \text{String}$ — уникальный идентификатор в формате UUID
+    \item $man \in \text{String}$ — производитель
+    \item $model \in \text{String}$ — модель
+    \item $rev \in \text{String}$ — ревизия
+\end{itemize}
+
+При этом существует инъективная функция идентификации:
+\[
+\phi: \mathcal{I} \to \text{String}
+\]
+\[
+\phi(I) = id
+\]
+
+\subsubsection{Тип устройства}
+\[
+T \in \mathcal{T} = \{\text{sensor}, \text{actuator}, \text{controller}, \text{gateway}\}
+\]
+
+Дополнительно определим функцию категоризации:
+\[
+\kappa: \mathcal{T} \to \mathcal{C}
+\]
+где $\mathcal{C}$ — множество категорий устройств (например, soil\_moisture\_sensor, water\_valve и т.д.)
+
+\subsubsection{Протоколы взаимодействия}
+\[
+P = (p_{primary}, \mathcal{P}_{backup}, v_p) \in \mathcal{P}
+\]
+
+где:
+\begin{itemize}
+    \item $p_{primary} \in \Pi$ — основной протокол из множества протоколов $\Pi$
+    \item $\mathcal{P}_{backup} \subset \Pi$ — множество резервных протоколов
+    \item $v_p \in \text{String}$ — версия протокола
+\end{itemize}
+
+\subsubsection{Возможности устройства}
+\[
+C = (M_{sens}, A_{ctrl}, F_{meas}) \in \mathcal{C}
+\]
+
+где:
+\begin{itemize}
+    \item $M_{sens} \subset \mathcal{S}$ — множество сенсоров
+    \item $A_{ctrl} \subset \mathcal{A}$ — множество актуаторов
+    \item $F_{meas} \subset \mathcal{F}$ — множество измерительных функций
+\end{itemize}
+
+Сенсор определяется как:
+\[
+s = (type, unit, range, accuracy, interval) \in \mathcal{S}
+\]
+\[
+range = (min, max) \in \mathbb{R}^2
+\]
+\[
+accuracy \in \mathbb{R}_{\geq 0}
+\]
+\[
+interval \in \mathbb{R}_{>0} \cup \{\text{on-demand}\}
+\]
+
+Актуатор определяется как:
+\[
+a = (type, states, default) \in \mathcal{A}
+\]
+\[
+states \subset \mathbb{S} \text{ (конечное множество состояний)}
+\]
+\[
+default \in states
+\]
+
+\subsubsection{Сетевые параметры}
+\[
+N = (m, \pi, f, q) \in \mathcal{N}
+\]
+
+где:
+\begin{itemize}
+    \item $m \in \{\text{true}, \text{false}\}$ — поддержка mesh-сети
+    \item $\pi \in \text{String}$ — mesh-протокол
+    \item $f \in \mathbb{R}_{>0}$ — рабочая частота в ГГц
+    \item $q \in [0, 1] \times \mathbb{R}$ — качество связи $(link\_quality, rssi)$
+\end{itemize}
+
+\subsubsection{Прошивка}
+\[
+F = (v_f, d_f, ota) \in \mathcal{F}
+\]
+
+где:
+\begin{itemize}
+    \item $v_f \in \text{String}$ — версия прошивки
+    \item $d_f \in \text{Timestamp}$ — дата сборки
+    \item $ota \in \text{Boolean}$ — поддержка обновлений "по воздуху"
+\end{itemize}
+
+\subsubsection{UI-подсказки}
+\[
+U = (icon, color, desc) \in \mathcal{U}
+\]
+
+где:
+\begin{itemize}
+    \item $icon \in \text{String}$ — идентификатор иконки
+    \item $color \in \text{String}$ — цвет в HEX-формате
+    \item $desc \in \text{String}$ — локализованное описание
+\end{itemize}
+
+\subsubsection{Совместимые сценарии}
+\[
+S \subset \Theta
+\]
+
+где $\Theta$ — множество всех доступных сценариев использования.
+
+\section{Формальные отношения и ограничения}
+
+\subsection{Отношение совместимости}
+Определим бинарное отношение совместимости между устройством и сценарием:
+
+\[
+\vDash \subseteq \mathcal{M} \times \Theta
+\]
+
+$M \vDash \theta$ означает, что устройство $M$ совместимо со сценарием $\theta$.
+
+\subsection{Аксиомы корректности}
+
+Для любого манифеста $M$ должны выполняться следующие аксиомы:
+
+\begin{axiom}[Идентификации]
+\[
+\forall M_1, M_2 \in \mathcal{M}: \phi(I_1) = \phi(I_2) \implies M_1 = M_2
+\]
+\end{axiom}
+
+\begin{axiom}[Полноты]
+\[
+\forall M \in \mathcal{M}: (T = \text{sensor}) \implies (M_{sens} \neq \varnothing)
+\]
+\[
+\forall M \in \mathcal{M}: (T = \text{actuator}) \implies (A_{ctrl} \neq \varnothing)
+\]
+\end{axiom}
+
+\begin{axiom}[Согласованности]
+\[
+\forall s \in M_{sens}: min \leq max
+\]
+\[
+\forall s \in M_{sens}: interval \in \mathbb{R}_{>0} \implies interval \geq \epsilon \text{ (минимальный интервал)}
+\]
+\end{axiom}
+
+\subsection{Функция валидации}
+
+Определим функцию валидации манифеста:
+
+\[
+\text{valid}: \mathcal{M} \to \{\text{true}, \text{false}\}
+\]
+
+\[
+\text{valid}(M) = \bigwedge_{i=1}^{n} \text{constraint}_i(M)
+\]
+
+где $\text{constraint}_i$ — проверка выполнения i-го ограничения.
+
+\section{Операции над манифестами}
+
+\subsection{Сравнение версий}
+\[
+\text{version\_cmp}: \mathbb{N}^3 \times \mathbb{N}^3 \to \{-1, 0, 1\}
+\]
+
+\[
+\text{version\_cmp}((a_1,a_2,a_3), (b_1,b_2,b_3)) = 
+\begin{cases}
+-1 & \text{если } a_1 < b_1 \text{ или } (a_1 = b_1 \land a_2 < b_2) \text{ или } (a_1 = b_1 \land a_2 = b_2 \land a_3 < b_3) \\
+0 & \text{если } a_1 = b_1 \land a_2 = b_2 \land a_3 = b_3 \\
+1 & \text{иначе}
+\end{cases}
+\]
+
+\subsection{Слияние манифестов (для составных устройств)}
+Для устройств с дочерними элементами определим операцию слияния:
+
+\[
+\oplus: \mathcal{M} \times \mathcal{M}^* \to \mathcal{M}
+\]
+
+\[
+M \oplus [M_1, M_2, \ldots, M_n] = M'
+\]
+
+где $M'$ содержит информацию из $M$ и всех дочерних манифестов.
+
+\section{Метрика расстояния между манифестами}
+
+Для поиска похожих устройств определим метрику:
+
+\[
+d: \mathcal{M} \times \mathcal{M} \to \mathbb{R}_{\geq 0}
+\]
+
+\[
+d(M_1, M_2) = \sum_{i} w_i \cdot \delta_i(M_1, M_2)
+\]
+
+где $w_i$ — веса, а $\delta_i$ — функции различия по каждому компоненту.
+
+\section{Формальная грамматика манифеста}
+
+В нотации расширенной формы Бэкуса-Наура (EBNF):
+
+\begin{verbatim}
+manifest   = version , device-info , type , protocols , capabilities , 
+              network , firmware , ui-hints , scenarios ;
+
+version    = major , "." , minor , "." , patch ;
+major      = number ;
+minor      = number ;
+patch      = number ;
+
+device-info = "{" , id , "," , manufacturer , "," , model , "," , revision , "}" ;
+id         = string , ":" , hexdigit{8} , "-" , hexdigit{4} , "-" , hexdigit{4} , 
+             "-" , hexdigit{4} , "-" , hexdigit{12} ;
+
+capabilities = sensors , actuators ;
+sensors    = "[" , sensor { "," , sensor } , "]" ;
+sensor     = "{" , type , "," , unit , "," , range , "," , accuracy , "," , interval , "}" ;
+range      = "(" , number , "," , number , ")" ;
+\end{verbatim}
+
+\section{Теорема о единственности манифеста}
+
+\begin{theorem}[О единственности манифеста]
+Для каждого физического устройства существует единственный допустимый манифест в момент времени $t$.
+\end{theorem}
+
+\begin{proof}
+Следует из аксиомы идентификации и детерминированности процесса генерации манифеста. Если предположить существование двух различных манифестов $M_1 \neq M_2$ для одного устройства, то $\phi(I_1) = \phi(I_2)$ (один и тот же ID), что противоречит аксиоме идентификации.
+\end{proof}
+
+\paragraph{Итог:} Данная математическая формализация обеспечивает строгую основу для реализации системы самоописания устройств, гарантируя однозначность интерпретации, возможность автоматической валидации и совместимость компонентов экосистемы.
+
+\end{document}
