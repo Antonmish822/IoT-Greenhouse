@@ -21,7 +21,45 @@
 
 ---
 
+## 💻 Предварительные требования
+
+Для локальной разработки и запуска проекта вам потребуются:
+
+*   **Git**: Система контроля версий для работы с репозиторием.
+*   **Docker** и **Docker Compose (V2)**: Для сборки и запуска всех сервисов проекта в контейнерах. Убедитесь, что у вас установлены актуальные версии Docker Engine и Docker Compose.
+
+---
+
 ## 💻 Как запускать
+
+### С использованием Docker Compose
+
+Рекомендуемый способ запуска проекта для разработки:
+
+1.  Убедитесь, что у вас установлен Docker и Docker Compose (V2).
+2.  Клонируйте репозиторий:
+    ```bash
+    git clone https://github.com/your-repo/IoT-Greenhouse.git
+    cd IoT-Greenhouse
+    ```
+3.  Создайте файлы `.env` для бэкенда и фронтенда. Вы можете использовать примеры из `backend/.env.example` и `frontend/.env.example` (если они существуют, или просто создать пустые файлы):
+    ```bash
+    cp backend/.env.example backend/.env
+    cp frontend/.env.example frontend/.env
+    # Отредактируйте .env файлы при необходимости
+    ```
+    *Примечание:* Убедитесь, что переменная `FRONTEND_ALLOWED_ORIGIN` в `backend/.env` включает `http://localhost:8000`, а `BACKEND_URL` во `frontend/.env` указывает на `http://backend:8001` (внутри Docker сети) или `http://localhost:8002` (для локального доступа к бэкенду вне контейнера, если это необходимо).
+4.  Запустите все сервисы с помощью Docker Compose:
+    ```bash
+    docker compose up --build
+    ```
+    *   Фронтенд будет доступен по адресу: `http://localhost:8000`
+    *   Бэкенд API будет доступен по адресу: `http://localhost:8002`
+
+Для остановки сервисов нажмите `Ctrl+C` в терминале или выполните:
+```bash
+docker compose down
+```
 
 ### Backend
 
@@ -42,7 +80,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install Django==5.2.8
 python manage.py migrate
-python manage.py runserver 8010 
+python manage.py runserver 8010
 ```
 
 Доступ по умолчанию `http://127.0.0.1:8010/` (страница логина из `growing/main/templates/main/login.html`).
@@ -50,6 +88,78 @@ python manage.py runserver 8010
 ---
 
 ## 🧪 Разработка и вклад
+
+### Запуск тестов
+
+Для обеспечения качества кода и предотвращения регрессий, регулярно запускайте тесты.
+
+#### Бэкенд (FastAPI)
+
+1.  Установите `pytest` (если еще не установлен):
+    ```bash
+    pip install pytest
+    ```
+2.  Перейдите в директорию `backend/`:
+    ```bash
+    cd backend/
+    ```
+3.  Запустите тесты:
+    ```bash
+    pytest
+    ```
+
+#### Фронтенд (Django)
+
+1.  Перейдите в директорию `frontend/`:
+    ```bash
+    cd frontend/
+    ```
+2.  Запустите тесты:
+    ```bash
+    python manage.py test
+    ```
+
+### Линтинг и форматирование
+
+Для поддержания чистоты и единообразия кода используйте Black для форматирования и Flake8 для линтинга.
+
+#### Бэкенд (FastAPI)
+
+1.  Установите Black и Flake8 (если еще не установлены):
+    ```bash
+    pip install black flake8
+    ```
+2.  Перейдите в директорию `backend/`:
+    ```bash
+    cd backend/
+    ```
+3.  Запустите форматирование с помощью Black:
+    ```bash
+    black .
+    ```
+4.  Запустите линтинг с помощью Flake8:
+    ```bash
+    flake8 .
+    ```
+
+#### Фронтенд (Django)
+
+1.  Установите Black и Flake8 (если еще не установлены):
+    ```bash
+    pip install black flake8
+    ```
+2.  Перейдите в директорию `frontend/`:
+    ```bash
+    cd frontend/
+    ```
+3.  Запустите форматирование с помощью Black:
+    ```bash
+    black .
+    ```
+4.  Запустите линтинг с помощью Flake8:
+    ```bash
+    flake8 .
+    ```
 
 ### Стратегия ветвления и именование
 
