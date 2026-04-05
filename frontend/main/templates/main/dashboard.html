@@ -784,87 +784,106 @@
         }
     }
 
-    // Обновление отображения теплиц
-    function updateGreenhousesDisplay() {
-      const container = document.getElementById('greenhouses-container');
-      
-      if (currentGreenhouses.length === 0) {
-        showEmptyState('У вас еще нет теплиц');
-        return;
-      }
-      
-      // Создаем сетку
-      const grid = document.createElement('div');
-      grid.className = 'greenhouses-grid';
-      
-      currentGreenhouses.forEach((greenhouse, index) => {
-        const greenhouseCard = createGreenhouseCard(greenhouse);
-        // Добавляем класс для анимации только для самой новой теплицы
-        if (index === 0 && greenhouseCard.classList) {
-          greenhouseCard.classList.add('new');
+    // Эта функция заменяет все предыдущие версии updateGreenhousesDisplay
+    async function updateGreenhousesDisplay() {
+        const container = document.getElementById('greenhouses-container');
+        
+        if (currentGreenhouses.length === 0) {
+            showEmptyState('У вас еще нет теплиц');
+            return;
         }
-        grid.appendChild(greenhouseCard);
-      });
-      
-      container.innerHTML = '';
-      container.appendChild(grid);
+        
+        container.innerHTML = `<div class="loading"><i class="fas fa-spinner fa-spin"></i> Загрузка показателей...</div>`;
+        
+        const grid = document.createElement('div');
+        grid.className = 'greenhouses-grid';
+        
+        // Асинхронно создаем все карточки
+        const cardPromises = currentGreenhouses.map(greenhouse => createGreenhouseCard(greenhouse));
+        const cards = await Promise.all(cardPromises);
+        
+        cards.forEach((card, index) => {
+            // Добавляем анимацию для первой (самой новой) карточки
+            if (index === 0 && card.classList) {
+                card.classList.add('new');
+            }
+            grid.appendChild(card);
+        });
+        
+        container.innerHTML = '';
+        container.appendChild(grid);
     }
 
-    // Создание карточки теплицы
-    function createGreenhouseCard(greenhouse) {
-        const card = document.createElement('a');
-        card.href = `/greenhouse_detail?greenhouse_id=${greenhouse.id}`;
-        card.className = 'greenhouse-card';
-        card.style.textDecoration = 'none';
-        card.style.color = 'inherit';
-        
-        // Генерируем случайные показатели для демонстрации
-        const isOnline = greenhouse.is_active !== false;
-        const temperature = isOnline ? (22 + Math.random() * 6).toFixed(1) : '—';
-        const humidity = isOnline ? (65 + Math.random() * 15).toFixed(0) : '—';
-        const actuatorStatus = isOnline ? 'Открыто (100%)' : 'Нет данных';
-        const actuatorIcon = isOnline ? 'fa-window-maximize' : 'fa-exclamation-triangle';
-        
-        // Выбираем иконку в зависимости от статуса
-        const greenhouseIcon = isOnline ? 'fa-leaf' : 'fa-leaf';
-        
-        // Формируем отображение местоположения
-        const hasLocation = greenhouse.location && greenhouse.location.trim() !== '';
-        const locationClass = hasLocation ? '' : 'no-location';
-        const locationText = hasLocation ? greenhouse.location : 'Местоположение не указано';
-        
-        card.innerHTML = `
-            <div class="greenhouse-icon">
-                <i class="fas ${greenhouseIcon}"></i>
-            </div>
-            <div class="card-header">
-                <h3 class="card-title">${escapeHtml(greenhouse.name)}</h3>
-                <span class="status ${isOnline ? 'online' : 'offline'}">
-                    ${isOnline ? 'Онлайн' : 'Оффлайн'}
-                </span>
-            </div>
-            <div class="greenhouse-location ${locationClass}">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>${escapeHtml(locationText)}</span>
-            </div>
-            <div class="metrics">
-                <div class="metric">
-                    <div class="metric-value">${temperature}${isOnline ? '°C' : ''}</div>
-                    <div class="metric-label">Температура</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-value">${humidity}${isOnline ? '%' : ''}</div>
-                    <div class="metric-label">Влажность</div>
-                </div>
-            </div>
-            <div class="actuator-status">
-                <i class="fas ${actuatorIcon}"></i>
-                <span>${actuatorStatus}</span>
-            </div>
-        `;
-        
-        return card;
-    }
+    // Эта функция заменяет все предыдущие версии createGreenhouseCard
+     async function createGreenhouseCard(greenhouse) {
+         const card = document.createElement('a');
+         card.href = `/greenhouse_detail?greenhouse_id=${greenhouse.id}`;
+         card.className = 'greenhouse-card';
+         card.style.textDecoration = 'none';
+         card.style.color = 'inherit';
+         
+         // Получаем актуальные метрики из API
+         const metrics = await loadGreenhouseMetricsOptimized(greenhouse.id);
+         const isOnline = greenhouse.is_active !== false;
+         
+         // Инициализируем переменные по умолчанию
+         let temperatureDisplay = '—';
+         let humidityDisplay = '—';
+         let actuatorStatus = 'Нет данных';
+         let actuatorIcon = 'fa-exclamation-triangle';
+ 
+         // Обновляем значения, если теплица онлайн и метрики получены
+         if (isOnline && metrics) {
+             if (metrics.temperature !== null) {
+                 temperatureDisplay = parseFloat(metrics.temperature).toFixed(1);
+             }
+             if (metrics.humidity !== null) {
+                 humidityDisplay = Math.round(parseFloat(metrics.humidity));
+             }
+             // Обрабатываем статус актуатора
+             if (metrics.actuatorOpenState !== null) {
+                 if (metrics.actuatorOpenState === 'true') {
+                     actuatorStatus = 'Открыт';
+                     actuatorIcon = 'fa-window-maximize';
+                 } else {
+                     actuatorStatus = 'Закрыт';
+                     actuatorIcon = 'fa-window-close';
+                 }
+             }
+         }
+         
+         const hasLocation = greenhouse.location && greenhouse.location.trim() !== '';
+         const locationText = hasLocation ? greenhouse.location : 'Местоположение не указано';
+         
+         // Формируем HTML карточки с актуальными данными
+         card.innerHTML = `
+             <div class="greenhouse-icon"><i class="fas fa-leaf"></i></div>
+             <div class="card-header">
+                 <h3 class="card-title">${escapeHtml(greenhouse.name)}</h3>
+                 <span class="status ${isOnline ? 'online' : 'offline'}">${isOnline ? 'Онлайн' : 'Оффлайн'}</span>
+             </div>
+             <div class="greenhouse-location ${!hasLocation ? 'no-location' : ''}">
+                 <i class="fas fa-map-marker-alt"></i>
+                 <span>${escapeHtml(locationText)}</span>
+             </div>
+             <div class="metrics">
+                 <div class="metric">
+                     <div class="metric-value">${temperatureDisplay}${temperatureDisplay !== '—' ? '°C' : ''}</div>
+                     <div class="metric-label">Температура</div>
+                 </div>
+                 <div class="metric">
+                     <div class="metric-value">${humidityDisplay}${humidityDisplay !== '—' ? '%' : ''}</div>
+                     <div class="metric-label">Влажность</div>
+                 </div>
+             </div>
+             <div class="actuator-status">
+                 <i class="fas ${actuatorIcon}"></i>
+                 <span>${actuatorStatus}</span>
+             </div>
+         `;
+         
+         return card;
+      }
 
     // Показать состояние "пусто"
     function showEmptyState(message) {
@@ -950,9 +969,9 @@
                 return null;
             }
             
-            let temperature = null;
-            let humidity = null;
-            
+                    let temperature = null;
+                    let humidity = null;
+                    let actuatorOpenState = null; // Инициализируем переменную для статуса актуатора            
             // 2. Параллельно загружаем телеметрию для всех устройств
             const telemetryPromises = devices.map(async (device) => {
                 try {
@@ -1003,6 +1022,19 @@
                         }
                     }
                 }
+
+                // Ищем статус актуатора
+                if (actuatorOpenState === null) {
+                    const actuatorKeys = ['actuatorOpen']; // Key from the problem description
+                    for (const key of actuatorKeys) {
+                        if (telemetry[key] && telemetry[key].length > 0) {
+                            const lastSample = telemetry[key][telemetry[key].length - 1];
+                            actuatorOpenState = lastSample.value; // Will be "true" or "false" string
+                            break;
+                        }
+                    }
+                }
+                
                 
                 // Если нашли оба значения, прекращаем
                 if (temperature !== null && humidity !== null) {
@@ -1010,7 +1042,7 @@
                 }
             }
             
-            const result = { temperature, humidity };
+            const result = { temperature, humidity, actuatorOpenState };
             
             // Сохраняем в кэш
             metricsCache[greenhouseId] = {
@@ -1042,32 +1074,47 @@
         // Форматируем значения
         let temperatureDisplay = '—';
         let humidityDisplay = '—';
-        
+        let actuatorStatus = 'Нет данных'; // Инициализируем
+        let actuatorIcon = 'fa-exclamation-triangle'; // Инициализируем
+
         if (isOnline) {
             // Только если есть реальные данные из API, показываем их
             if (metrics && metrics.temperature !== null) {
-                temperatureDisplay = typeof metrics.temperature === 'number' ? 
-                    metrics.temperature.toFixed(1) : 
+                temperatureDisplay = typeof metrics.temperature === 'number' ?
+                    metrics.temperature.toFixed(1) :
                     parseFloat(metrics.temperature).toFixed(1);
             }
             // Если данных нет - остаётся "—"
-            
+
             if (metrics && metrics.humidity !== null) {
-                humidityDisplay = typeof metrics.humidity === 'number' ? 
-                    Math.round(metrics.humidity) : 
+                humidityDisplay = typeof metrics.humidity === 'number' ?
+                    Math.round(metrics.humidity) :
                     Math.round(parseFloat(metrics.humidity));
             }
             // Если данных нет - остаётся "—"
+
+            // Логика обработки статуса актуатора
+            if (metrics && metrics.actuatorOpenState !== null) {
+                if (metrics.actuatorOpenState === 'true') {
+                    actuatorStatus = 'Открыт';
+                    actuatorIcon = 'fa-window-maximize';
+                } else {
+                    actuatorStatus = 'Закрыт';
+                    actuatorIcon = 'fa-window-close';
+                }
+            } else {
+                actuatorStatus = 'Нет данных';
+                actuatorIcon = 'fa-exclamation-triangle';
+            }
+        } else {
+            // Если оффлайн
+            actuatorStatus = 'Нет данных';
+            actuatorIcon = 'fa-exclamation-triangle';
         }
-        
-        // УДАЛЕНО: демо-данные больше не используются
-        // Только реальные данные из API или "—"
-        
-        const actuatorStatus = isOnline ? 'Открыто (100%)' : 'Нет данных';
-        const actuatorIcon = isOnline ? 'fa-window-maximize' : 'fa-exclamation-triangle';
-        
+
         // Выбираем иконку в зависимости от статуса
-        const greenhouseIcon = isOnline ? 'fa-leaf' : 'fa-leaf';
+        const greenhouseIcon = 'fa-leaf'; // The icon for the greenhouse itself
+
         
         // Формируем отображение местоположения
         const hasLocation = greenhouse.location && greenhouse.location.trim() !== '';

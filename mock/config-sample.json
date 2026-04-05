@@ -1,0 +1,10 @@
+{
+  "api_base_url": "http://81.177.135.202:5010/api/v1",
+  "interval": 10,
+  "request_timeout_seconds": 5,
+  "devices": [
+    "token-1",
+    "token-2",
+    "token-3"
+  ]
+}

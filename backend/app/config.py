@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
 
 
@@ -18,11 +20,10 @@ class Settings(BaseSettings):
     thingsboard_telemetry_path: str = (
         "/api/plugins/telemetry/DEVICE/{device_id}/values/timeseries"
     )
-    thingsboard_telemetry_keys: str = (
-        "temperature,humidity,windowPosition,status,position"
-    )
+    thingsboard_telemetry_keys: str = "temperature,humidity,actuatorOpen"
     thingsboard_telemetry_limit: int = 120
+    automation_interval_seconds: int = 30
 
     class Config:
-        env_file = ".env"
+        env_file = Path(__file__).resolve().parents[1] / ".env"
         env_file_encoding = "utf-8"
