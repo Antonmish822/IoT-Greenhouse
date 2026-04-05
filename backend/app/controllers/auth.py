@@ -31,7 +31,8 @@ def login_options():
 
 @router.post("/login")
 def login(
-    form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: Session = Depends(get_session),
 ):
     user = authenticate_user(session, form_data.username, form_data.password)
     if not user:

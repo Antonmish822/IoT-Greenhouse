@@ -5,7 +5,9 @@ from sqlmodel import Session, select
 from ..models import Greenhouse
 
 
-def get_for_user(session: Session, user_id: int, greenhouse_id: int) -> Greenhouse | None:
+def get_for_user(
+    session: Session, user_id: int, greenhouse_id: int
+) -> Greenhouse | None:
     statement = select(Greenhouse).where(
         Greenhouse.id == greenhouse_id,
         Greenhouse.user_id == user_id,

@@ -38,7 +38,9 @@ class Device(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-    serial_number: str = Field(sa_column_kwargs={"unique": True}, index=True, nullable=False)
+    serial_number: str = Field(
+        sa_column_kwargs={"unique": True}, index=True, nullable=False
+    )
     is_active: bool = Field(default=True)
     last_seen: Optional[datetime] = Field(default=None)
     device_metadata: Optional[Dict[str, Any]] = Field(
