@@ -38,11 +38,17 @@ def get_thingsboard_token() -> str:
         "Content-Type": "application/json",
     }
     try:
-        response = httpx.post(url, json=payload, headers=headers, timeout=settings.thingsboard_request_timeout)
+        response = httpx.post(
+            url,
+            json=payload,
+            headers=headers,
+            timeout=settings.thingsboard_request_timeout,
+        )
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
         raise RuntimeError(
-            f"ThingsBoard authentication failed ({exc.response.status_code}): {exc.response.text}"
+            f"ThingsBoard authentication failed ({exc.response.status_code}): "
+            f"{exc.response.text}"
         ) from exc
     except httpx.HTTPError as exc:
         raise RuntimeError("Failed to authenticate against ThingsBoard") from exc
@@ -63,11 +69,14 @@ def verify_device_exists(serial_number: str) -> None:
     token = get_thingsboard_token()
     headers = {"X-Authorization": f"Bearer {token}"}
     try:
-        response = httpx.get(url, headers=headers, timeout=settings.thingsboard_request_timeout)
+        response = httpx.get(
+            url, headers=headers, timeout=settings.thingsboard_request_timeout
+        )
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
         raise ValueError(
-            f"Device {serial_number} not available on ThingsBoard ({exc.response.status_code})"
+            f"Device {serial_number} not available on ThingsBoard ("
+            f"{exc.response.status_code})"
         ) from exc
     except httpx.HTTPError as exc:
         raise RuntimeError("Failed to contact ThingsBoard") from exc
@@ -93,7 +102,10 @@ def fetch_device_telemetry(
 
     try:
         response = httpx.get(
-            url, headers=headers, params=params, timeout=settings.thingsboard_request_timeout
+            url,
+            headers=headers,
+            params=params,
+            timeout=settings.thingsboard_request_timeout,
         )
         response.raise_for_status()
     except httpx.HTTPError as exc:
