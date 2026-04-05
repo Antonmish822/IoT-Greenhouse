@@ -1,0 +1,287 @@
+\documentclass{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{amsfonts}
+\usepackage{dsfont}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\newtheorem{theorem}{Теорема}
+\newtheorem{definition}{Определение}
+\newtheorem{axiom}{Аксиома}
+\newtheorem{corollary}{Следствие}
+\newtheorem{invariant}{Инвариант}
+
+\begin{document}
+
+\section{Математическая формализация требования расширяемости (Extensibility)}
+
+\subsection{Базовые определения}
+
+Пусть $\mathcal{M}$ — множество всех возможных манифестов, соответствующих некоторой версии схемы.
+
+Определим множество версий схемы:
+\[
+\Sigma = \{\sigma_1, \sigma_2, \ldots, \sigma_n, \ldots\}
+\]
+
+Каждая версия схемы $\sigma_i$ определяет допустимое множество манифестов $\mathcal{M}_{\sigma_i} \subset \mathcal{M}$.
+
+\begin{definition}
+\textbf{Манифест} $m \in \mathcal{M}_{\sigma_i}$ — это кортеж значений, соответствующий схеме $\sigma_i$.
+\end{definition}
+
+\subsection{Отношение совместимости версий}
+
+Определим бинарное отношение совместимости "назад" (обратная совместимость):
+
+\[
+\preceq \subseteq \Sigma \times \Sigma
+\]
+
+где $\sigma_j \preceq \sigma_i$ означает, что схема версии $\sigma_j$ обратно совместима со схемой версии $\sigma_i$ (т.е. все манифесты, корректные для $\sigma_i$, также корректны для $\sigma_j$).
+
+\begin{axiom}[Транзитивность совместимости]
+\[
+\forall \sigma_i, \sigma_j, \sigma_k \in \Sigma: (\sigma_k \preceq \sigma_j) \land (\sigma_j \preceq \sigma_i) \implies (\sigma_k \preceq \sigma_i)
+\]
+\end{axiom}
+
+\subsection{Формализация расширяемости}
+
+\subsubsection{Монотонность расширения}
+
+Для любой пары версий схем $\sigma_i, \sigma_j \in \Sigma$ таких, что $\sigma_j$ является расширением $\sigma_i$, должно выполняться:
+
+\[
+\mathcal{M}_{\sigma_i} \subseteq \mathcal{M}_{\sigma_j}
+\]
+
+Это означает, что множество допустимых манифестов при расширении схемы не уменьшается — все старые манифесты остаются допустимыми.
+
+\subsubsection{Операция расширения}
+
+Определим оператор расширения схемы:
+
+\[
+\oplus: \Sigma \times \Delta \to \Sigma
+\]
+
+
+где $\Delta$ — множество возможных расширений (добавлений новых полей, типов, атрибутов).
+
+\begin{definition}
+\textbf{Корректное расширение} удовлетворяет условию:
+\[
+\forall \sigma \in \Sigma, \forall \delta \in \Delta: \mathcal{M}_{\sigma} \subseteq \mathcal{M}_{\sigma \oplus \delta}
+\]
+\end{definition}
+
+\subsubsection{Функция проекции (игнорирования неизвестных полей)}
+
+Определим функцию проекции, которая отображает манифест из более новой версии в более старую путем удаления неизвестных полей:
+
+\[
+\pi_{\sigma_i}^{\sigma_j}: \mathcal{M}_{\sigma_j} \to \mathcal{M}_{\sigma_i}, \quad \text{где } \sigma_j \preceq \sigma_i
+\]
+
+\begin{definition}
+\textbf{Функция проекции} $\pi_{\sigma_i}^{\sigma_j}$ удаляет из манифеста все поля, не принадлежащие схеме $\sigma_i$, и сохраняет все поля, принадлежащие $\sigma_i$, с их исходными значениями.
+\end{definition}
+
+Требование корректности проекции:
+\[
+\forall m \in \mathcal{M}_{\sigma_i}: \pi_{\sigma_i}^{\sigma_j}(m) = m
+\]
+
+\subsubsection{Частичный порядок на множестве схем}
+
+Определим частичный порядок $\leq$ на $\Sigma$:
+
+\[
+\sigma_i \leq \sigma_j \iff \mathcal{M}_{\sigma_i} \subseteq \mathcal{M}_{\sigma_j}
+\]
+
+Тогда требование расширяемости формулируется как существование монотонной последовательности:
+
+\[
+\sigma_1 \leq \sigma_2 \leq \ldots \leq \sigma_n \leq \ldots
+\]
+
+\subsection{Инварианты расширяемости}
+
+\subsubsection{Инвариант неизменности существующих полей}
+
+Пусть $F_{\sigma}$ — множество всех полей (ключей), определенных в схеме $\sigma$. Для любого расширения $\sigma' = \sigma \oplus \delta$ должно выполняться:
+
+\[
+F_{\sigma} \subseteq F_{\sigma'}
+\]
+
+и семантика (смысл) каждого поля $f \in F_{\sigma}$ остается неизменной.
+
+\begin{invariant}[Неизменность семантики]
+\[
+\forall f \in F_{\sigma}, \forall m \in \mathcal{M}_{\sigma'}: \text{semantics}_{\sigma}(f, \pi_{\sigma}^{\sigma'}(m)) = \text{semantics}_{\sigma'}(f, m)
+\]
+где $\text{semantics}_{\sigma}(f, m)$ — интерпретация значения поля $f$ в манифесте $m$ согласно схеме $\sigma$.
+\end{invariant}
+
+\subsubsection{Инвариант парсируемости}
+
+Существует функция парсинга $\text{parse}_{\sigma}$, которая для любой схемы $\sigma$ и любого допустимого манифеста $m \in \mathcal{M}_{\sigma}$ возвращает корректное представление.
+
+\begin{invariant}[Парсируемость]
+Для любой пары версий $\sigma_i \leq \sigma_j$:
+\[
+\forall m \in \mathcal{M}_{\sigma_j}: \text{parse}_{\sigma_i}(\pi_{\sigma_i}^{\sigma_j}(m)) = \text{parse}_{\sigma_i}(\text{ignore\_unknown}_{\sigma_i}(m))
+\]
+где $\text{ignore\_unknown}_{\sigma_i}(m)$ — результат удаления из $m$ всех полей, не принадлежащих $F_{\sigma_i}$.
+\end{invariant}
+
+\subsection{Метрика расширяемости}
+
+Определим меру расширяемости схемы как количество обратно совместимых расширений, которые можно применить без нарушения существующих манифестов:
+
+\[
+E(\sigma) = |\{\delta \in \Delta : \mathcal{M}_{\sigma} \subseteq \mathcal{M}_{\sigma \oplus \delta}\}|
+\]
+
+\begin{definition}
+\textbf{Коэффициент расширяемости} для множества схем $\Sigma$:
+\[
+\kappa(\Sigma) = \inf_{\sigma \in \Sigma} \frac{E(\sigma)}{|\Delta|}
+\]
+при условии, что $|\Delta|$ конечно.
+\end{definition}
+
+\subsection{Теорема о расширяемости}
+
+\begin{theorem}[О существовании универсальной расширенной схемы]
+Если множество схем $\Sigma$ с отношением порядка $\leq$ образует полную решетку (complete lattice) с операцией расширения $\oplus$, то для любого множества манифестов, допустимых в некоторой версии $\sigma_0$, существует версия $\sigma^*$, которая обратно совместима со всеми предыдущими версиями и включает все необходимые расширения.
+\end{theorem}
+
+\begin{proof}
+Рассмотрим цепь расширений $\sigma_0 \leq \sigma_1 \leq \sigma_2 \leq \ldots$. В полной решетке существует точная верхняя грань $\sigma^* = \bigvee_{i=0}^{\infty} \sigma_i$. По построению, $\forall i: \mathcal{M}_{\sigma_i} \subseteq \mathcal{M}_{\sigma^*}$, что и требовалось доказать.
+\end{proof}
+
+\begin{corollary}
+Для любой конечной последовательности обратно совместимых расширений существует их объединение, также обратно совместимое со всеми исходными версиями.
+\end{corollary}
+
+\subsection{Формализация на уровне типов}
+
+В терминах теории типов, требование расширяемости означает, что тип манифеста является \textbf{расширяемым типом} (extensible type):
+
+\[
+\text{Manifest}_{\sigma_{k+1}} = \text{Manifest}_{\sigma_k} \times \text{Extension}_{\delta}
+\]
+
+где $\text{Extension}_{\delta}$ — тип, соответствующий добавляемым полям.
+
+При этом должна существовать функция приведения:
+
+\[
+\text{coerce}: \text{Manifest}_{\sigma_{k+1}} \to \text{Manifest}_{\sigma_k}
+\]
+
+которая является эпиморфизмом (сюръекцией), сохраняющим все поля базового типа:
+
+\[
+\forall m \in \text{Manifest}_{\sigma_{k+1}}, \forall f \in F_{\sigma_k}: \text{coerce}(m)[f] = m[f]
+\]
+
+\subsection{Категориальная интерпретация}
+
+Рассмотрим категорию $\mathcal{C}$, где:
+\begin{itemize}
+    \item объекты — версии схем $\sigma \in \Sigma$
+    \item морфизмы $\sigma_i \to \sigma_j$ существуют тогда и только тогда, когда $\sigma_i \leq \sigma_j$
+\end{itemize}
+
+\begin{definition}
+Функтор забывания $U: \mathcal{C} \to \textbf{Set}$ сопоставляет каждой схеме $\sigma$ множество допустимых манифестов $\mathcal{M}_{\sigma}$.
+\end{definition}
+
+Требование расширяемости означает существование естественного преобразования:
+\[
+\eta: U \Rightarrow U \circ F
+\]
+где $F$ — эндофунктор, соответствующий расширению схемы, такое что для каждого $\sigma$ отображение $\eta_{\sigma}: \mathcal{M}_{\sigma} \to \mathcal{M}_{F(\sigma)}$ является инъекцией.
+
+\subsection{Алгебраическая структура}
+
+\begin{definition}
+\textbf{Расширяемая сигнатура} $\mathcal{S} = (\Sigma, \oplus, \epsilon)$ — это моноид, где:
+\begin{itemize}
+    \item $\Sigma$ — множество версий схем
+    \item $\oplus: \Sigma \times \Sigma \to \Sigma$ — операция композиции расширений
+    \item $\epsilon \in \Sigma$ — нейтральный элемент (базовая схема)
+\end{itemize}
+\end{definition}
+
+Аксиомы моноида:
+\begin{align}
+(\sigma_i \oplus \sigma_j) \oplus \sigma_k &= \sigma_i \oplus (\sigma_j \oplus \sigma_k) \\
+\epsilon \oplus \sigma &= \sigma \oplus \epsilon = \sigma
+\end{align}
+
+Дополнительно требуется согласованность с отношением порядка:
+\[
+\sigma_i \leq \sigma_i \oplus \sigma_j
+\]
+
+\subsection{Практическая интерпретация}
+
+В терминах языков описания данных (например, JSON Schema), требование расширяемости формализуется как:
+
+\[
+\text{Schema}_{\sigma} = \{\text{type: ``object''}, \text{additionalProperties: true}, \text{properties: } P_{\sigma}, \text{required: } R_{\sigma}\}
+\]
+
+где $P_{\sigma}$ — множество описаний полей, $R_{\sigma} \subseteq \text{dom}(P_{\sigma})$ — множество обязательных полей.
+
+Здесь $\text{additionalProperties: true}$ математически соответствует утверждению:
+
+\[
+\forall m \in \mathcal{M}_{\sigma}: \text{dom}(m) \supseteq R_{\sigma}
+\]
+
+где $R_{\sigma}$ — множество обязательных полей, а все дополнительные поля (не входящие в $\text{dom}(P_{\sigma})$) игнорируются при обработке старыми системами.
+
+\begin{definition}
+\textbf{Обратно совместимое изменение} схемы $\sigma$ до $\sigma'$ удовлетворяет:
+\[
+R_{\sigma} \subseteq R_{\sigma'} \land \forall f \in R_{\sigma}: \text{type}_{\sigma'}(f) = \text{type}_{\sigma}(f)
+\]
+\end{definition}
+
+\subsection{Резюме}
+
+Требование расширяемости в математической формализации сводится к:
+
+\begin{enumerate}
+    \item \textbf{Монотонности} множества допустимых манифестов при переходе к новым версиям схемы
+    \[
+    \sigma_i \leq \sigma_j \implies \mathcal{M}_{\sigma_i} \subseteq \mathcal{M}_{\sigma_j}
+    \]
+    
+    \item \textbf{Существованию функции проекции}, позволяющей старым системам корректно обрабатывать новые манифесты
+    \[
+    \exists \pi_{\sigma_i}^{\sigma_j}: \mathcal{M}_{\sigma_j} \to \mathcal{M}_{\sigma_i}
+    \]
+    
+    \item \textbf{Сохранению семантики существующих полей} при добавлении новых
+    \[
+    \forall f \in F_{\sigma_i}: \text{semantics}(f, m) = \text{semantics}(f, \pi_{\sigma_i}^{\sigma_j}(m))
+    \]
+    
+    \item \textbf{Возможности строить бесконечные цепочки обратно совместимых расширений}
+    \[
+    \sigma_1 \leq \sigma_2 \leq \ldots \leq \sigma_n \leq \ldots
+    \]
+\end{enumerate}
+
+\end{document}

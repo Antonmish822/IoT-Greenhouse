@@ -1,0 +1,9 @@
+= Солидарный "умный огород"
+:toc: left
+:toclevels: 1
+
+
+include::базовые_сценарии.adoc[leveloffset=1]
+include::концепция_продуктовая.adoc[leveloffset=1]
+include::концепция_реализации.adoc[leveloffset=1]
+include::функционал_устройства.adoc[leveloffset=1]
