@@ -1,0 +1,57 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - dev-Antalya
+      - main # Assuming main is also a protected branch
+  pull_request:
+    branches:
+      - dev-Antalya
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install common dependencies (Black, Flake8, Pytest)
+        run: |
+          pip install black flake8 pytest
+
+      - name: Install backend dependencies
+        run: |
+          pip install -r backend/requirements.txt
+
+      - name: Install frontend dependencies
+        run: |
+          pip install -r frontend/requirements.txt
+
+      - name: Lint and Format Check (Backend)
+        run: |
+          black --check backend/
+          flake8 backend/
+
+      - name: Lint and Format Check (Frontend)
+        run: |
+          black --check frontend/
+          flake8 frontend/
+
+      - name: Run Backend Tests
+        run: |
+          pytest backend/
+
+      - name: Run Frontend Tests
+        run: |
+          python frontend/manage.py test
+
+      - name: Build Docker Images
+        run: |
+          docker compose build

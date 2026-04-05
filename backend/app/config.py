@@ -15,8 +15,12 @@ class Settings(BaseSettings):
     thingsboard_password: str = ""
     thingsboard_login_path: str = "/api/auth/login"
     thingsboard_request_timeout: float = 10.0
-    thingsboard_telemetry_path: str = "/api/plugins/telemetry/DEVICE/{device_id}/values/timeseries"
-    thingsboard_telemetry_keys: str = "temperature,humidity,windowPosition,status,position"
+    thingsboard_telemetry_path: str = (
+        "/api/plugins/telemetry/DEVICE/{device_id}/values/timeseries"
+    )
+    thingsboard_telemetry_keys: str = (
+        "temperature,humidity,windowPosition,status,position"
+    )
     thingsboard_telemetry_limit: int = 120
 
     class Config:

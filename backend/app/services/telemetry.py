@@ -12,7 +12,9 @@ from ..services.thingsboard import fetch_device_telemetry
 settings = Settings()
 
 
-def get_device_telemetry(session: Session, user_id: int, device_id: int) -> TelemetryRead:
+def get_device_telemetry(
+    session: Session, user_id: int, device_id: int
+) -> TelemetryRead:
     device = get_for_user(session, user_id, device_id)
     if not device:
         raise ValueError("Device not found for current user")

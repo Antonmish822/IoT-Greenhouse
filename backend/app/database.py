@@ -4,7 +4,9 @@ from .config import Settings
 
 settings = Settings()
 
-engine = create_engine(settings.database_url, echo=False, connect_args={"check_same_thread": False})
+engine = create_engine(
+    settings.database_url, echo=False, connect_args={"check_same_thread": False}
+)
 
 
 def init_db():

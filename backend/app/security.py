@@ -35,7 +35,9 @@ def create_access_token(subject: str, expires_delta: Optional[timedelta] = None)
 
 def decode_access_token(token: str) -> str:
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        )
         subject: Optional[str] = payload.get("sub")
         if subject is None:
             raise JWTError("Subject not found in token")
