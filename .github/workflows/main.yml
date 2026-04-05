@@ -3,11 +3,9 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - dev-Antalya
-      - main # Assuming main is also a protected branch
+      - main
   pull_request:
     branches:
-      - dev-Antalya
       - main
 
 jobs:
