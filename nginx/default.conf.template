@@ -1,7 +1,7 @@
 server {
     listen 80;
     # server_name iotgreenhouse.ru;
-    server_name localhost;
+    server_name ${SERVER_NAME:-localhost};
 
     access_log  /var/log/nginx/access.log;
     error_log   /var/log/nginx/error.log warn;
