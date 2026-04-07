@@ -32,14 +32,17 @@ def create_access_token(subject: str, expires_delta: Optional[timedelta] = None)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
-def create_refresh_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
+
+def create_refresh_token(
+    subject: str, expires_delta: Optional[timedelta] = None
+) -> str:
     """
-        Создает refresh токен для обновления access токена
-        Args:
-            subject: email пользователя
-            expires_delta: время жизни токена
-        Returns:
-            str: refresh токен
+    Создает refresh токен для обновления access токена
+    Args:
+        subject: email пользователя
+        expires_delta: время жизни токена
+    Returns:
+        str: refresh токен
     """
     to_encode = {"sub": subject, "type": "refresh"}
     expire = datetime.utcnow() + (
@@ -47,6 +50,7 @@ def create_refresh_token(subject: str, expires_delta: Optional[timedelta] = None
     )
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
 
 def decode_access_token(token: str) -> str:
     try:
@@ -65,14 +69,15 @@ def decode_access_token(token: str) -> str:
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
-    
+
+
 def decode_refresh_token(token: str) -> str:
     """
-        Декодирует refresh токен и возвращает email пользователя
-        Args:
-            token: refresh токен
-        Returns:
-            str: email пользователя
+    Декодирует refresh токен и возвращает email пользователя
+    Args:
+        token: refresh токен
+    Returns:
+        str: email пользователя
     """
     try:
         payload = jwt.decode(

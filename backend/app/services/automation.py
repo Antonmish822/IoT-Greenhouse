@@ -20,7 +20,9 @@ from ..services.thingsboard import send_rpc_request
 logger = logging.getLogger(__name__)
 
 
-def get_or_create_setting(session: Session, greenhouse_id: int, user_id: int) -> AutomationSetting:
+def get_or_create_setting(
+    session: Session, greenhouse_id: int, user_id: int
+) -> AutomationSetting:
     get_greenhouse_for_user(session, user_id, greenhouse_id)
     setting = get_for_greenhouse(session, greenhouse_id)
     if not setting:
@@ -134,7 +136,9 @@ def _get_actuator_device(devices: Iterable[Device]) -> Device | None:
     return None
 
 
-def _get_actuator_state(telemetry_map: dict[int, TelemetryRead], actuator: Device) -> str | None:
+def _get_actuator_state(
+    telemetry_map: dict[int, TelemetryRead], actuator: Device
+) -> str | None:
     if not actuator:
         return None
     record = telemetry_map.get(actuator.id)
@@ -192,7 +196,9 @@ def _process_setting(session: Session, setting: AutomationSetting) -> None:
         _send_command(setting, actuator, "close", session)
 
 
-def _send_command(setting: AutomationSetting, actuator: Device, command: str, session: Session) -> None:
+def _send_command(
+    setting: AutomationSetting, actuator: Device, command: str, session: Session
+) -> None:
     try:
         send_rpc_request(
             device_id=actuator.serial_number,

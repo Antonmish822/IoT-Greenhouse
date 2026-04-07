@@ -3,8 +3,12 @@ from sqlmodel import Session, select
 from ..models import AutomationSetting
 
 
-def get_for_greenhouse(session: Session, greenhouse_id: int) -> AutomationSetting | None:
-    statement = select(AutomationSetting).where(AutomationSetting.greenhouse_id == greenhouse_id)
+def get_for_greenhouse(
+    session: Session, greenhouse_id: int
+) -> AutomationSetting | None:
+    statement = select(AutomationSetting).where(
+        AutomationSetting.greenhouse_id == greenhouse_id
+    )
     return session.exec(statement).first()
 
 
