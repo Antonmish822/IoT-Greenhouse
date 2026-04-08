@@ -41,7 +41,9 @@ def read_greenhouse(
 ) -> GreenhouseRead:
     greenhouse = get_greenhouse_for_user(session, current_user.id, greenhouse_id)
     if not greenhouse:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Greenhouse not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Greenhouse not found"
+        )
     return _to_read(greenhouse)
 
 
@@ -54,7 +56,9 @@ def edit_greenhouse(
 ) -> GreenhouseRead:
     greenhouse = get_greenhouse_for_user(session, current_user.id, greenhouse_id)
     if not greenhouse:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Greenhouse not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Greenhouse not found"
+        )
     return update_greenhouse(session, greenhouse, payload)
 
 
@@ -66,7 +70,9 @@ def remove_greenhouse(
 ):
     greenhouse = get_greenhouse_for_user(session, current_user.id, greenhouse_id)
     if not greenhouse:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Greenhouse not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Greenhouse not found"
+        )
     delete_greenhouse(session, greenhouse)
 
 

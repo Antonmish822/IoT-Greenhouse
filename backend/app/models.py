@@ -38,7 +38,9 @@ class Device(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-    serial_number: str = Field(sa_column_kwargs={"unique": True}, index=True, nullable=False)
+    serial_number: str = Field(
+        sa_column_kwargs={"unique": True}, index=True, nullable=False
+    )
     is_active: bool = Field(default=True)
     last_seen: Optional[datetime] = Field(default=None)
     device_metadata: Optional[Dict[str, Any]] = Field(
@@ -59,3 +61,15 @@ class AutomationSetting(SQLModel, table=True):
     last_action: Optional[str] = Field(default=None)
     last_action_at: Optional[datetime] = Field(default=None)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class RefreshToken(SQLModel, table=True):
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    token: str = Field(index=True, nullable=False)
+    user_id: int = Field(foreign_key="user.id")
+    expires_at: datetime = Field(nullable=False)
+    revoked: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)

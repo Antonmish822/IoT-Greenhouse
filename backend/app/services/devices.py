@@ -28,7 +28,13 @@ def _get_thingsboard_token() -> str:
     if settings.thingsboard_token:
         return settings.thingsboard_token
 
-    if not all([settings.thingsboard_url, settings.thingsboard_username, settings.thingsboard_password]):
+    if not all(
+        [
+            settings.thingsboard_url,
+            settings.thingsboard_username,
+            settings.thingsboard_password,
+        ]
+    ):
         raise RuntimeError("ThingsBoard configuration missing")
 
     path = settings.thingsboard_login_path
@@ -48,7 +54,8 @@ def _get_thingsboard_token() -> str:
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
         raise RuntimeError(
-            f"ThingsBoard authentication failed ({exc.response.status_code}): {exc.response.text}"
+            f"ThingsBoard authentication failed ({exc.response.status_code}): "
+            f"{exc.response.text}"
         ) from exc
     except httpx.HTTPError as exc:
         raise RuntimeError("Failed to authenticate against ThingsBoard") from exc
@@ -67,7 +74,9 @@ def _verify_device_on_thingsboard(serial_number: str) -> None:
     path = settings.thingsboard_device_check_path
     if not path.startswith("/"):
         path = "/" + path
-    url = settings.thingsboard_url.rstrip("/") + path.format(serial_number=serial_number)
+    url = settings.thingsboard_url.rstrip("/") + path.format(
+        serial_number=serial_number
+    )
     token = _get_thingsboard_token()
     headers = {"X-Authorization": f"Bearer {token}"}
     try:
@@ -89,7 +98,9 @@ def _ensure_greenhouse_belongs_to_user(
         raise ValueError("Greenhouse not found for current user")
 
 
-def get_device_for_user(session: Session, user_id: int, device_id: int) -> Device | None:
+def get_device_for_user(
+    session: Session, user_id: int, device_id: int
+) -> Device | None:
     return get_for_user(session, user_id, device_id)
 
 

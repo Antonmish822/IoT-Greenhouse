@@ -4,9 +4,7 @@ from ..schemas import UserUpdate
 from ..security import get_password_hash
 
 
-def update_user_profile(
-    session: Session, current_user, payload: UserUpdate
-):
+def update_user_profile(session: Session, current_user, payload: UserUpdate):
     updated = False
     if payload.full_name is not None:
         current_user.full_name = payload.full_name

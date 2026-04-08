@@ -17,9 +17,17 @@ from .services.automation import start_automation_loop
 settings = Settings()
 app = FastAPI(title=settings.app_name)
 
-allowed_origins = ["http://localhost:8001", "http://localhost:8010","http://127.0.0.1:8000"]
+allowed_origins = [
+    "http://localhost:8001",
+    "http://localhost:8010",
+    "http://127.0.0.1:8000",
+]
 if settings.frontend_allowed_origin:
-    selected_origins = [origin.strip() for origin in settings.frontend_allowed_origin.split(",") if origin.strip()]
+    selected_origins = [
+        origin.strip()
+        for origin in settings.frontend_allowed_origin.split(",")
+        if origin.strip()
+    ]
     if selected_origins:
         allowed_origins = selected_origins
 
@@ -41,5 +49,6 @@ app.include_router(rpc_router)
 
 
 @app.on_event("startup")
-def on_startup():
+async def on_startup():
     init_db()
+    asyncio.create_task(start_automation_loop(settings.automation_interval_seconds))
