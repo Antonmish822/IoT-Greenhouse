@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     jwt_secret: str = "replace_this_with_secure_random_value"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
+    refresh_token_expire_minutes: int = 60 * 24 * 30
+    oauth_code_expire_minutes: int = 5
+    bot_link_expire_minutes: int = 5
     frontend_allowed_origin: str | None = None
     thingsboard_url: str = ""
     thingsboard_token: str = ""

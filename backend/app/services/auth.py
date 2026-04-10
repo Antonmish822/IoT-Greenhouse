@@ -1,4 +1,5 @@
 from sqlmodel import Session, select
+from urllib.parse import urlparse, urlencode, parse_qsl, urlunparse
 
 from ..models import User
 from ..schemas import UserCreate
@@ -29,3 +30,14 @@ def register_user(session: Session, payload: UserCreate) -> User:
     session.commit()
     session.refresh(user)
     return user
+
+
+
+def _redirect_with_params(base_url: str, params: dict) -> str:
+    parts = urlparse(base_url)
+    q = dict(parse_qsl(parts.query, keep_blank_values=True))
+    q.update({k: v for k, v in params.items() if v is not None})
+    new_query = urlencode(q)
+    return urlunparse(
+        (parts.scheme, parts.netloc, parts.path, parts.params, new_query, parts.fragment)
+    )
