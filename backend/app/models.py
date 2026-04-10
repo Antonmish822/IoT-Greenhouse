@@ -73,3 +73,42 @@ class RefreshToken(SQLModel, table=True):
     expires_at: datetime = Field(nullable=False)
     revoked: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class OAuthClient(SQLModel, table=True):
+    """
+        Таблица зарегистрированных приложений
+    """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    client_id: str = Field(index=True, nullable=False)
+    client_secret: str = Field(nullable=False)
+    redirect_uri: str = Field(nullable=False)
+    name: str = Field(nullable=False)
+
+
+class AuthorizationCode(SQLModel, table=True):
+    """
+        Таблица кодов авторизации
+    """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    code: str = Field(index=True, nullable=False)
+    client_id: int = Field(foreign_key="oauthclient.id")
+    user_id: int = Field(foreign_key="user.id")
+    redirect_uri: str = Field(nullable=False)
+    expires_at: datetime = Field(nullable=False)
+    used: bool = Field(default=False)
+
+
+class BotLinkToken(SQLModel, table=True):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    token: str = Field(index=True, nullable=False)
+    user_id: int = Field(foreign_key="user.id")
+    expires_at: datetime = Field(nullable=False)
+    used: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
